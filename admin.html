@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin · Clay House Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy:     #1b2b38;
+      --terra:    #b8684a;
+      --cream:    #f6f0e8;
+      --warm-white: #fdfaf6;
+      --blush:    #ede4d9;
+      --border:   #e2d8ce;
+      --text:     #2a3540;
+      --text-mid: #5e707c;
+      --text-lt:  #96a8b4;
+      --green:    #4a8c6a;
+      --red:      #c0392b;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Jost', sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      font-weight: 300;
+      min-height: 100vh;
+    }
+
+    /* ─── HEADER ─────────────────────────────────────── */
+    header {
+      background: var(--navy);
+      padding: 0 2rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 1rem; }
+
+    .header-logo {
+      width: 36px; height: 36px;
+      background: var(--terra);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 1px;
+    }
+
+    .header-logo span {
+      font-size: 6.5px; font-weight: 600;
+      color: white; letter-spacing: 0.12em;
+    }
+
+    .header-title { font-size: 0.85rem; color: rgba(255,255,255,0.8); letter-spacing: 0.06em; }
+    .header-sub   { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--terra); margin-top: 1px; }
+
+    .header-link {
+      font-size: 0.7rem; color: rgba(255,255,255,0.35);
+      text-decoration: none; letter-spacing: 0.1em;
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 0.35rem 0.8rem; border-radius: 2px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .header-link:hover { color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.3); }
+
+    /* ─── LOGIN ───────────────────────────────────────── */
+    .login-screen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: calc(100vh - 64px);
+    }
+
+    .login-card {
+      background: var(--warm-white);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 2.5rem;
+      width: 100%; max-width: 360px;
+      text-align: center;
+    }
+
+    .login-card h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.6rem; font-weight: 300;
+      color: var(--navy); margin-bottom: 0.4rem;
+    }
+
+    .login-card p { font-size: 0.78rem; color: var(--text-mid); margin-bottom: 1.75rem; }
+
+    /* ─── FORM ELEMENTS ───────────────────────────────── */
+    input, textarea, select {
+      width: 100%;
+      padding: 0.7rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      font-family: 'Jost', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 300;
+      color: var(--text);
+      background: white;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, textarea:focus { border-color: var(--terra); }
+    textarea { resize: vertical; min-height: 130px; line-height: 1.65; }
+
+    .field-label {
+      display: block;
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--navy);
+      margin-bottom: 0.4rem;
+    }
+
+    .field-hint { font-weight: 300; font-size: 0.68rem; color: var(--text-lt); letter-spacing: 0; text-transform: none; }
+
+    .field { margin-bottom: 1rem; }
+    .field:last-child { margin-bottom: 0; }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+
+    /* ─── BUTTONS ─────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border: none; border-radius: 2px;
+      cursor: pointer; font-family: 'Jost', sans-serif;
+      font-size: 0.78rem; font-weight: 500;
+      letter-spacing: 0.08em;
+      transition: background 0.2s, opacity 0.2s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
+
+    .btn-terra  { background: var(--terra); color: white; }
+    .btn-terra:not(:disabled):hover  { background: #a55a3e; }
+
+    .btn-navy   { background: var(--navy); color: white; }
+    .btn-navy:not(:disabled):hover   { background: #233445; }
+
+    .btn-ghost  { background: transparent; color: var(--text-mid); border: 1px solid var(--border); }
+    .btn-ghost:not(:disabled):hover  { border-color: var(--text-mid); }
+
+    .btn-sm { padding: 0.4rem 0.75rem; font-size: 0.72rem; }
+
+    /* ─── ADMIN WRAPPER ───────────────────────────────── */
+    .admin-wrap {
+      max-width: 860px; margin: 0 auto;
+      padding: 2rem 2rem 4rem;
+      display: none;
+    }
+    .admin-wrap.visible { display: block; }
+
+    .page-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem; font-weight: 300;
+      color: var(--navy); margin-bottom: 0.25rem;
+    }
+    .page-sub { font-size: 0.75rem; color: var(--text-lt); letter-spacing: 0.1em; margin-bottom: 2rem; }
+
+    /* ─── CARD ────────────────────────────────────────── */
+    .card {
+      background: var(--warm-white);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 1.25rem;
+    }
+
+    .card-head {
+      background: var(--navy);
+      padding: 0.7rem 1.4rem;
+      display: flex; align-items: center; gap: 0.65rem;
+    }
+
+    .card-dot { width: 5px; height: 5px; background: var(--terra); border-radius: 50%; }
+    .card-title { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.65); }
+
+    .card-body { padding: 1.4rem; }
+
+    /* ─── WORK PACKAGES ───────────────────────────────── */
+    .wp-category-label {
+      font-size: 0.6rem; font-weight: 600;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--terra);
+      padding: 0.75rem 0 0.4rem;
+      border-bottom: 1px solid var(--blush);
+      margin-bottom: 0.5rem;
+    }
+    .wp-category-label:first-child { padding-top: 0; }
+
+    .wp-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem 1.5rem;
+    }
+
+    .wp-item {
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+
+    .wp-item-label {
+      flex: 1; font-size: 0.8rem; color: var(--text-mid);
+    }
+
+    .wp-item input[type="number"] {
+      width: 62px; text-align: center;
+      padding: 0.4rem 0.5rem; font-size: 0.82rem;
+    }
+
+    .wp-item-suffix { font-size: 0.75rem; color: var(--text-lt); }
+
+    /* ─── PHOTOS ──────────────────────────────────────── */
+    .photo-note {
+      font-size: 0.75rem; color: var(--text-mid);
+      background: var(--blush); border-radius: 2px;
+      padding: 0.65rem 0.9rem; margin-bottom: 1rem;
+      line-height: 1.55;
+    }
+
+    .photo-row {
+      display: flex; gap: 0.5rem; margin-bottom: 0.5rem;
+    }
+    .photo-row input { flex: 1; }
+
+    .btn-rm {
+      padding: 0.4rem 0.65rem; font-size: 0.8rem;
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 2px; cursor: pointer; color: var(--text-lt);
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .btn-rm:hover { color: var(--red); border-color: var(--red); }
+
+    .btn-add {
+      width: 100%; padding: 0.65rem;
+      background: transparent; border: 1px dashed var(--border);
+      border-radius: 2px; cursor: pointer;
+      font-family: 'Jost', sans-serif; font-size: 0.78rem;
+      color: var(--text-lt); transition: all 0.2s;
+    }
+    .btn-add:hover { border-color: var(--terra); color: var(--terra); }
+
+    /* ─── PREVIEW ─────────────────────────────────────── */
+    .preview-card {
+      border: 1px solid var(--terra);
+      border-radius: 3px; overflow: hidden;
+      margin-bottom: 1.25rem; display: none;
+    }
+    .preview-card.visible { display: block; }
+
+    .preview-head {
+      background: var(--terra); padding: 0.7rem 1.4rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .preview-head-title { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: white; }
+    .preview-head-hint  { font-size: 0.6rem; color: rgba(255,255,255,0.55); }
+
+    .preview-body { padding: 1.5rem; }
+
+    .preview-narrative {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.05rem; line-height: 1.85;
+      color: var(--text); margin-bottom: 1rem;
+    }
+
+    .preview-sec-title {
+      font-size: 0.6rem; font-weight: 500;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--terra); margin: 1rem 0 0.4rem;
+    }
+
+    .preview-list { list-style: none; display: flex; flex-direction: column; gap: 0.3rem; }
+    .preview-list li { font-size: 0.8rem; color: var(--text-mid); padding-left: 1rem; position: relative; line-height: 1.55; }
+    .preview-list li::before { content: ''; position: absolute; left: 0; top: 0.55em; width: 4px; height: 4px; background: var(--terra); border-radius: 50%; }
+
+    /* ─── GENERATING SPINNER ──────────────────────────── */
+    .generating {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 2.5rem; gap: 1rem;
+      color: var(--text-lt); font-size: 0.75rem; letter-spacing: 0.1em;
+    }
+
+    .spinner {
+      width: 28px; height: 28px;
+      border: 2px solid var(--blush);
+      border-top-color: var(--terra);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── STATUS ──────────────────────────────────────── */
+    .status-bar {
+      padding: 0.85rem 1.2rem; border-radius: 2px;
+      font-size: 0.8rem; margin-bottom: 1.25rem;
+      display: none; animation: fadeIn 0.3s ease;
+    }
+    .status-bar.success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; display: block; }
+    .status-bar.error   { background: #fce4e4; color: #c62828; border: 1px solid #ef9a9a; display: block; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+    /* ─── ACTIONS ─────────────────────────────────────── */
+    .actions {
+      display: flex; gap: 0.75rem; justify-content: flex-end;
+      flex-wrap: wrap; padding: 1rem 1.4rem;
+      border-top: 1px solid var(--border);
+      background: var(--warm-white);
+    }
+
+    /* ─── ERROR ───────────────────────────────────────── */
+    .err-msg {
+      font-size: 0.72rem; color: var(--red);
+      margin-top: 0.4rem; display: none;
+    }
+
+    @media (max-width: 600px) {
+      .wp-grid { grid-template-columns: 1fr; }
+      .field-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="header-logo"><span>THE</span><span>CLAY</span><span>HSE</span></div>
+    <div>
+      <div class="header-title">Contractor Admin</div>
+      <div class="header-sub">Report Builder</div>
+    </div>
+  </div>
+  <a href="/" class="header-link">← Buyer Portal</a>
+</header>
+
+<!-- ─── LOGIN ─────────────────────────────────── -->
+<div class="login-screen" id="login-screen">
+  <div class="login-card">
+    <h2>Contractor Login</h2>
+    <p>Enter the admin password to access the report builder.</p>
+    <div class="field">
+      <input type="password" id="pw-input" placeholder="Password"
+        onkeydown="if(event.key==='Enter') login()">
+      <div class="err-msg" id="pw-err">Incorrect password. Please try again.</div>
+    </div>
+    <button class="btn btn-terra" style="width:100%; justify-content:center; margin-top:0.5rem" onclick="login()">Sign In</button>
+  </div>
+</div>
+
+<!-- ─── ADMIN FORM ─────────────────────────────── -->
+<div class="admin-wrap" id="admin-wrap">
+
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2rem;">
+    <div>
+      <div class="page-title">New Progress Report</div>
+      <div class="page-sub">Fill in the details below — Claude will synthesise your notes into a buyer-ready report.</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="logout()">Sign Out</button>
+  </div>
+
+  <div class="status-bar" id="status-bar"></div>
+
+  <!-- Report Details -->
+  <div class="card">
+    <div class="card-head"><div class="card-dot"></div><div class="card-title">Report Details</div></div>
+    <div class="card-body">
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">Report Period <span class="field-hint">(e.g. "March 2026")</span></label>
+          <input type="text" id="period" placeholder="March 2026">
+        </div>
+        <div class="field">
+          <label class="field-label">Estimated Completion</label>
+          <input type="text" id="completion" placeholder="e.g. June 2026">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contractor Notes -->
+  <div class="card">
+    <div class="card-head"><div class="card-dot"></div><div class="card-title">Contractor Notes</div></div>
+    <div class="card-body">
+      <div class="field">
+        <label class="field-label">Raw Notes <span class="field-hint">— Claude will turn these into a polished report for buyers</span></label>
+        <textarea id="raw-notes" rows="6"
+          placeholder="Describe what work was done this month. Include key milestones, completed items, and work in progress. Write freely — Claude will handle the polishing."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Work Packages -->
+  <div class="card">
+    <div class="card-head"><div class="card-dot"></div><div class="card-title">Work Package Completion (%)</div></div>
+    <div class="card-body">
+      <div id="wp-container"><!-- built by JS --></div>
+    </div>
+  </div>
+
+  <!-- Site Photos -->
+  <div class="card">
+    <div class="card-head"><div class="card-dot"></div><div class="card-title">Site Photos</div></div>
+    <div class="card-body">
+      <div class="photo-note">
+        Paste Google Drive shareable links. In Google Drive: right-click a photo → <strong>Share</strong> → <strong>Copy link</strong>. Make sure access is set to "Anyone with the link."
+      </div>
+      <div id="photo-list">
+        <div class="photo-row">
+          <input type="text" placeholder="https://drive.google.com/file/d/…/view?usp=sharing">
+          <button class="btn-rm" onclick="removePhoto(this)" title="Remove">×</button>
+        </div>
+      </div>
+      <button class="btn-add" onclick="addPhoto()">+ Add photo URL</button>
+    </div>
+  </div>
+
+  <!-- Preview (hidden until generated) -->
+  <div class="preview-card" id="preview-card">
+    <div class="preview-head">
+      <span class="preview-head-title">Claude-Generated Report Preview</span>
+      <span class="preview-head-hint">Review before publishing to buyers</span>
+    </div>
+    <div class="preview-body" id="preview-body"></div>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions">
+    <button class="btn btn-ghost" onclick="resetForm()">Clear Form</button>
+    <button class="btn btn-terra" id="gen-btn" onclick="generateReport()">
+      <span id="gen-icon">✦</span> Generate Report with Claude
+    </button>
+    <button class="btn btn-navy" id="pub-btn" style="display:none" onclick="publishReport()">
+      Publish to Buyer Portal →
+    </button>
+  </div>
+
+</div>
+
+<script>
+  const WORK_PACKAGES = [
+    { category: 'Foundation',         items: ['Preparation', 'Soil Work', 'Stonework'] },
+    { category: 'Structure',          items: ['Concrete Work Structure', 'Pool Structure', 'Ground Tank & Deep-well'] },
+    { category: 'Finishing',          items: ['Wall Finishing', 'Floor Finishing', 'Door & Window Installation', 'Plumbing Installation', 'Sanitary Installation', 'Electrical Work'] },
+    { category: 'Furnishing & Fit-Out', items: ['Fit-Out', 'Furnishing'] }
+  ];
+
+  let adminPassword = '';
+  let pendingReport  = null;
+
+  /* ─── Build WP inputs ────────────────────────────── */
+  function buildWpInputs() {
+    const container = document.getElementById('wp-container');
+    let html = '';
+    for (const cat of WORK_PACKAGES) {
+      html += `<div class="wp-category-label">${cat.category}</div>`;
+      html += '<div class="wp-grid">';
+      for (const item of cat.items) {
+        const id = 'wp__' + item.replace(/[^a-zA-Z0-9]/g, '_');
+        html += `<div class="wp-item">
+          <span class="wp-item-label">${item}</span>
+          <input type="number" id="${id}" data-item="${item}" min="0" max="100" value="0">
+          <span class="wp-item-suffix">%</span>
+        </div>`;
+      }
+      html += '</div>';
+    }
+    container.innerHTML = html;
+  }
+  buildWpInputs();
+
+  function getWpValues() {
+    const result = {};
+    document.querySelectorAll('#wp-container input[data-item]').forEach(el => {
+      result[el.dataset.item] = parseInt(el.value) || 0;
+    });
+    return result;
+  }
+
+  function getPhotos() {
+    return Array.from(document.querySelectorAll('#photo-list input'))
+      .map(el => el.value.trim()).filter(Boolean);
+  }
+
+  /* ─── Photos ──────────────────────────────────────── */
+  function addPhoto() {
+    const row = document.createElement('div');
+    row.className = 'photo-row';
+    row.innerHTML = `<input type="text" placeholder="https://drive.google.com/file/d/…/view?usp=sharing">
+      <button class="btn-rm" onclick="removePhoto(this)" title="Remove">×</button>`;
+    document.getElementById('photo-list').appendChild(row);
+  }
+
+  function removePhoto(btn) {
+    const rows = document.querySelectorAll('.photo-row');
+    if (rows.length > 1) btn.closest('.photo-row').remove();
+    else btn.closest('.photo-row').querySelector('input').value = '';
+  }
+
+  /* ─── Auth ────────────────────────────────────────── */
+  async function login() {
+    const pw = document.getElementById('pw-input').value;
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw })
+      });
+      const d = await res.json();
+      if (d.success) {
+        adminPassword = pw;
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('admin-wrap').classList.add('visible');
+      } else {
+        document.getElementById('pw-err').style.display = 'block';
+      }
+    } catch {
+      document.getElementById('pw-err').style.display = 'block';
+    }
+  }
+
+  function logout() {
+    adminPassword = '';
+    pendingReport  = null;
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('admin-wrap').classList.remove('visible');
+    document.getElementById('pw-input').value = '';
+  }
+
+  /* ─── Status ──────────────────────────────────────── */
+  function showStatus(msg, type) {
+    const el = document.getElementById('status-bar');
+    el.textContent = msg;
+    el.className = `status-bar ${type}`;
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function hideStatus() {
+    document.getElementById('status-bar').className = 'status-bar';
+  }
+
+  /* ─── Generate ────────────────────────────────────── */
+  async function generateReport() {
+    const period   = document.getElementById('period').value.trim();
+    const rawNotes = document.getElementById('raw-notes').value.trim();
+    const comp     = document.getElementById('completion').value.trim();
+
+    if (!period)    return showStatus('Please enter the report period (e.g. "March 2026").', 'error');
+    if (!rawNotes)  return showStatus('Please enter contractor notes before generating.', 'error');
+    hideStatus();
+
+    const genBtn = document.getElementById('gen-btn');
+    genBtn.disabled = true;
+    document.getElementById('gen-icon').textContent = '';
+
+    const previewCard = document.getElementById('preview-card');
+    previewCard.classList.add('visible');
+    document.getElementById('preview-body').innerHTML = `
+      <div class="generating">
+        <div class="spinner"></div>
+        Claude is generating your report…
+      </div>`;
+    document.getElementById('pub-btn').style.display = 'none';
+    previewCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          password:           adminPassword,
+          period,
+          rawNotes,
+          estimatedCompletion: comp,
+          workPackages:        getWpValues(),
+          photos:              getPhotos()
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || 'Generation failed');
+
+      pendingReport = data;
+      renderPreview(data.synthesized);
+      document.getElementById('pub-btn').style.display = '';
+
+    } catch (err) {
+      document.getElementById('preview-body').innerHTML =
+        `<div style="color:var(--red); padding:0.5rem; font-size:0.82rem;">Error: ${err.message}</div>`;
+    }
+
+    genBtn.disabled = false;
+    document.getElementById('gen-icon').textContent = '↻';
+    genBtn.childNodes[1].nodeValue = ' Re-generate with Claude';
+  }
+
+  function renderPreview(syn) {
+    if (!syn) return;
+    let html = `<p class="preview-narrative">${syn.generalComments || ''}</p>`;
+    if (syn.sections) {
+      for (const sec of syn.sections) {
+        if (sec.bullets && sec.bullets.length) {
+          html += `<div class="preview-sec-title">${sec.title}</div>`;
+          html += `<ul class="preview-list">${sec.bullets.map(b => `<li>${b}</li>`).join('')}</ul>`;
+        }
+      }
+    }
+    document.getElementById('preview-body').innerHTML = html;
+  }
+
+  /* ─── Publish ─────────────────────────────────────── */
+  async function publishReport() {
+    if (!pendingReport) return;
+
+    const pubBtn = document.getElementById('pub-btn');
+    pubBtn.disabled = true;
+    pubBtn.textContent = 'Publishing…';
+
+    try {
+      const res = await fetch('/api/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword, report: pendingReport })
+      });
+
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || 'Publish failed');
+
+      showStatus(`✓ Report for "${pendingReport.period}" has been published. Buyers can now view it on the portal.`, 'success');
+      pubBtn.style.display = 'none';
+
+    } catch (err) {
+      showStatus(`Error publishing: ${err.message}`, 'error');
+      pubBtn.disabled = false;
+      pubBtn.textContent = 'Publish to Buyer Portal →';
+    }
+  }
+
+  /* ─── Reset ───────────────────────────────────────── */
+  function resetForm() {
+    document.getElementById('period').value    = '';
+    document.getElementById('raw-notes').value = '';
+    document.getElementById('completion').value = '';
+    document.querySelectorAll('#wp-container input').forEach(el => el.value = 0);
+    document.getElementById('photo-list').innerHTML = `
+      <div class="photo-row">
+        <input type="text" placeholder="https://drive.google.com/file/d/…/view?usp=sharing">
+        <button class="btn-rm" onclick="removePhoto(this)" title="Remove">×</button>
+      </div>`;
+    document.getElementById('preview-card').classList.remove('visible');
+    document.getElementById('pub-btn').style.display = 'none';
+    const genBtn = document.getElementById('gen-btn');
+    genBtn.disabled = false;
+    document.getElementById('gen-icon').textContent = '✦';
+    genBtn.childNodes[1].nodeValue = ' Generate Report with Claude';
+    hideStatus();
+    pendingReport = null;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>

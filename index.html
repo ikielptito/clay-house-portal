@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Clay House · Construction Progress</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy:         #1b2b38;
+      --navy-mid:     #233445;
+      --terra:        #b8684a;
+      --terra-light:  #d4927a;
+      --cream:        #f6f0e8;
+      --warm-white:   #fdfaf6;
+      --blush:        #ede4d9;
+      --border:       #e2d8ce;
+      --text:         #2a3540;
+      --text-mid:     #5e707c;
+      --text-light:   #96a8b4;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Jost', sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      min-height: 100vh;
+      font-weight: 300;
+    }
+
+    /* ─── HEADER ─────────────────────────────────────── */
+    header {
+      background: var(--navy);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-inner {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 1.1rem;
+    }
+
+    .logo-mark {
+      width: 44px;
+      height: 44px;
+      background: var(--terra);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .logo-mark span {
+      display: block;
+      font-family: 'Jost', sans-serif;
+      font-size: 7.5px;
+      font-weight: 600;
+      color: white;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .logo-text h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+      font-size: 1.35rem;
+      color: white;
+      letter-spacing: 0.08em;
+    }
+
+    .logo-text p {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.42);
+      margin-top: 1px;
+    }
+
+    .header-badge {
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--terra-light);
+      border: 1px solid rgba(184,104,74,0.4);
+      padding: 0.35rem 0.75rem;
+      border-radius: 2px;
+    }
+
+    /* ─── HERO STRIP ──────────────────────────────────── */
+    .hero {
+      background: var(--navy-mid);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .hero-inner {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 2.4rem 2rem;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+
+    .hero-period {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.8rem;
+      font-weight: 300;
+      color: white;
+      letter-spacing: 0.03em;
+      line-height: 1;
+    }
+
+    .hero-period span {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      color: var(--terra-light);
+    }
+
+    .hero-meta {
+      display: flex;
+      gap: 3rem;
+    }
+
+    .hero-stat {
+      text-align: right;
+    }
+
+    .hero-stat-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.38);
+      margin-bottom: 0.3rem;
+    }
+
+    .hero-stat-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      color: white;
+      font-weight: 400;
+    }
+
+    .hero-stat-value.accent { color: var(--terra-light); }
+
+    /* ─── MAIN ────────────────────────────────────────── */
+    main {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 2.5rem 2rem 4rem;
+    }
+
+    /* ─── LOADING ─────────────────────────────────────── */
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8rem 2rem;
+      color: var(--text-light);
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      gap: 1.5rem;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 2px solid var(--border);
+      border-top-color: var(--terra);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── TWO-COL LAYOUT ──────────────────────────────── */
+    .report-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    .report-main { }
+    .report-sidebar { }
+
+    /* ─── CARD ────────────────────────────────────────── */
+    .card {
+      background: var(--warm-white);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-head {
+      background: var(--navy);
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .card-head-title {
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.7);
+      font-weight: 400;
+    }
+
+    .card-head-dot {
+      width: 5px;
+      height: 5px;
+      background: var(--terra);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .card-body { padding: 1.5rem; }
+
+    /* ─── GENERAL COMMENTS ────────────────────────────── */
+    .narrative {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem;
+      line-height: 1.9;
+      color: var(--text);
+      font-weight: 400;
+      margin-bottom: 1.2rem;
+    }
+
+    .detail-block { margin-top: 1.3rem; }
+
+    .detail-block-title {
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--terra);
+      font-weight: 500;
+      margin-bottom: 0.65rem;
+    }
+
+    .detail-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .detail-list li {
+      font-size: 0.82rem;
+      line-height: 1.65;
+      color: var(--text-mid);
+      padding-left: 1.1rem;
+      position: relative;
+    }
+
+    .detail-list li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.55em;
+      width: 4px;
+      height: 4px;
+      background: var(--terra-light);
+      border-radius: 50%;
+    }
+
+    /* ─── WORK PACKAGES ───────────────────────────────── */
+    .wp-table { width: 100%; border-collapse: collapse; }
+
+    .wp-category {
+      background: var(--blush);
+      padding: 0.5rem 1.2rem;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--navy);
+      font-weight: 600;
+    }
+
+    .wp-row {
+      border-bottom: 1px solid #f0ebe3;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .wp-row:last-child { border-bottom: none; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .wp-row td {
+      padding: 0.65rem 1.2rem;
+      font-size: 0.8rem;
+      color: var(--text-mid);
+      vertical-align: middle;
+    }
+
+    .wp-row td:first-child { width: 46%; }
+    .wp-row td:last-child  { width: 54%; }
+
+    .wp-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .wp-bar-track {
+      flex: 1;
+      height: 5px;
+      background: var(--blush);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .wp-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: var(--terra);
+      transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .wp-bar-fill.done { background: var(--navy); }
+
+    .wp-pct {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text);
+      min-width: 32px;
+      text-align: right;
+    }
+
+    /* ─── PHOTOS ──────────────────────────────────────── */
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .photo-tile {
+      aspect-ratio: 4 / 3;
+      overflow: hidden;
+      background: var(--blush);
+      border-radius: 2px;
+      cursor: zoom-in;
+    }
+
+    .photo-tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .photo-tile:hover img { transform: scale(1.05); }
+
+    /* Lightbox */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(20,30,38,0.94);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+
+    .lightbox.open { opacity: 1; pointer-events: all; }
+
+    .lightbox img {
+      max-width: 90vw;
+      max-height: 88vh;
+      object-fit: contain;
+      border-radius: 2px;
+    }
+
+    .lightbox-close {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      color: rgba(255,255,255,0.6);
+      font-size: 1.5rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0.5rem;
+    }
+
+    /* ─── SIDEBAR ─────────────────────────────────────── */
+    .overall-ring-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1.75rem 1.5rem;
+    }
+
+    .ring-svg { display: block; }
+
+    .ring-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-light);
+      text-align: center;
+    }
+
+    .ring-pct {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.4rem;
+      color: var(--navy);
+      font-weight: 300;
+      line-height: 1;
+    }
+
+    /* Past reports */
+    .past-item {
+      padding: 0.9rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .past-item:last-child { border-bottom: none; }
+    .past-item:hover { background: var(--blush); }
+
+    .past-period { font-size: 0.82rem; color: var(--text); }
+
+    .past-arrow {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      transition: color 0.2s, transform 0.2s;
+    }
+
+    .past-item:hover .past-arrow { color: var(--terra); transform: translateX(2px); }
+
+    /* ─── EMPTY STATE ─────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 8rem 2rem;
+    }
+
+    .empty-state h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem;
+      font-weight: 300;
+      color: var(--navy);
+      margin-bottom: 0.75rem;
+    }
+
+    .empty-state p {
+      font-size: 0.82rem;
+      color: var(--text-light);
+    }
+
+    /* ─── FOOTER ──────────────────────────────────────── */
+    footer {
+      background: var(--navy);
+      color: rgba(255,255,255,0.25);
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    /* ─── RESPONSIVE ──────────────────────────────────── */
+    @media (max-width: 840px) {
+      .report-grid { grid-template-columns: 1fr; }
+      .hero-period { font-size: 2rem; }
+      .hero-meta { gap: 1.5rem; }
+    }
+
+    @media (max-width: 540px) {
+      .hero-inner { flex-direction: column; align-items: flex-start; }
+      .hero-meta { flex-direction: row; gap: 2rem; }
+      .hero-stat { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-mark">
+        <span>THE</span><span>CLAY</span><span>HOUSE</span>
+      </div>
+      <div class="logo-text">
+        <h1>The Clay House</h1>
+        <p>Cepaka · Bali, Indonesia</p>
+      </div>
+    </div>
+    <div class="header-badge">Construction Progress</div>
+  </div>
+</header>
+
+<div class="hero" id="hero" style="display:none">
+  <div class="hero-inner">
+    <div class="hero-period" id="hero-period"></div>
+    <div class="hero-meta">
+      <div class="hero-stat">
+        <div class="hero-stat-label">Overall Progress</div>
+        <div class="hero-stat-value" id="hero-pct">—</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-label">Est. Completion</div>
+        <div class="hero-stat-value accent" id="hero-completion">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div id="content">
+    <div class="loading-state">
+      <div class="spinner"></div>
+      Loading progress report
+    </div>
+  </div>
+</main>
+
+<footer>
+  The Clay House Cepaka &nbsp;·&nbsp; Construction Progress Portal &nbsp;·&nbsp; Confidential to Unit Holders
+</footer>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <div class="lightbox-close" onclick="closeLightbox()">✕</div>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<script>
+  const WORK_PACKAGES = [
+    { category: 'Foundation',         items: ['Preparation', 'Soil Work', 'Stonework'] },
+    { category: 'Structure',          items: ['Concrete Work Structure', 'Pool Structure', 'Ground Tank & Deep-well'] },
+    { category: 'Finishing',          items: ['Wall Finishing', 'Floor Finishing', 'Door & Window Installation', 'Plumbing Installation', 'Sanitary Installation', 'Electrical Work'] },
+    { category: 'Furnishing & Fit-Out', items: ['Fit-Out', 'Furnishing'] }
+  ];
+
+  function driveUrl(url) {
+    if (!url) return url;
+    const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w800`;
+    return url;
+  }
+
+  function getPct(wp, item) {
+    if (!wp) return 0;
+    return parseInt(wp[item] ?? 0) || 0;
+  }
+
+  function overallPct(wp) {
+    let sum = 0, n = 0;
+    for (const cat of WORK_PACKAGES)
+      for (const item of cat.items) { sum += getPct(wp, item); n++; }
+    return n ? Math.round(sum / n) : 0;
+  }
+
+  function buildRing(pct) {
+    const r = 46, cx = 54, cy = 54, circ = 2 * Math.PI * r;
+    const fill = circ * (pct / 100);
+    return `<svg class="ring-svg" width="108" height="108" viewBox="0 0 108 108">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#ede4d9" stroke-width="6"/>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#b8684a" stroke-width="6"
+        stroke-dasharray="${fill} ${circ}" stroke-dashoffset="${circ * 0.25}"
+        stroke-linecap="round" transform="rotate(-90 ${cx} ${cy})"/>
+    </svg>`;
+  }
+
+  function buildWorkPackages(wp) {
+    let html = '<table class="wp-table"><tbody>';
+    for (const cat of WORK_PACKAGES) {
+      html += `<tr><td class="wp-category" colspan="2">${cat.category}</td></tr>`;
+      cat.items.forEach((item, i) => {
+        const pct = getPct(wp, item);
+        const done = pct === 100;
+        html += `<tr class="wp-row" style="animation-delay:${i * 0.04}s">
+          <td>${item}</td>
+          <td>
+            <div class="wp-bar-wrap">
+              <div class="wp-bar-track">
+                <div class="wp-bar-fill ${done ? 'done' : ''}" style="width:0%" data-pct="${pct}"></div>
+              </div>
+              <span class="wp-pct">${pct}%</span>
+            </div>
+          </td>
+        </tr>`;
+      });
+    }
+    html += '</tbody></table>';
+    return html;
+  }
+
+  function buildPhotos(photos) {
+    if (!photos || !photos.length) return '';
+    const tiles = photos.map(url => {
+      const src = driveUrl(url);
+      return `<div class="photo-tile" onclick="openLightbox('${src}')">
+        <img src="${src}" loading="lazy" alt="Site photo" onerror="this.closest('.photo-tile').style.display='none'">
+      </div>`;
+    }).join('');
+    return `<div class="card">
+      <div class="card-head"><div class="card-head-dot"></div><div class="card-head-title">Site Photography</div></div>
+      <div class="card-body"><div class="photo-grid">${tiles}</div></div>
+    </div>`;
+  }
+
+  function buildComments(synthesized) {
+    if (!synthesized) return '';
+    let html = `<p class="narrative">${synthesized.generalComments || ''}</p>`;
+    if (synthesized.sections) {
+      for (const sec of synthesized.sections) {
+        if (sec.bullets && sec.bullets.length) {
+          html += `<div class="detail-block">
+            <div class="detail-block-title">${sec.title}</div>
+            <ul class="detail-list">${sec.bullets.map(b => `<li>${b}</li>`).join('')}</ul>
+          </div>`;
+        }
+      }
+    }
+    return `<div class="card">
+      <div class="card-head"><div class="card-head-dot"></div><div class="card-head-title">General Comments</div></div>
+      <div class="card-body">${html}</div>
+    </div>`;
+  }
+
+  function render(report) {
+    const { period, estimatedCompletion, workPackages, photos, synthesized, generatedAt } = report;
+    const pct = overallPct(workPackages);
+
+    // Hero
+    const [month, year] = period.split(' ');
+    document.getElementById('hero-period').innerHTML = `${month} <span>${year || ''}</span>`;
+    document.getElementById('hero-pct').textContent = pct + '%';
+    document.getElementById('hero-completion').textContent = estimatedCompletion || '—';
+    document.getElementById('hero').style.display = '';
+
+    const sidebar = `
+      <div class="card">
+        <div class="card-head"><div class="card-head-dot"></div><div class="card-head-title">Overall Completion</div></div>
+        <div class="overall-ring-wrap">
+          ${buildRing(pct)}
+          <div class="ring-pct">${pct}%</div>
+          <div class="ring-label">Across all work packages</div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('content').innerHTML = `
+      <div class="report-grid">
+        <div class="report-main">
+          ${buildComments(synthesized)}
+          <div class="card">
+            <div class="card-head"><div class="card-head-dot"></div><div class="card-head-title">Overview &amp; Status of Work-Packages</div></div>
+            <div>${buildWorkPackages(workPackages)}</div>
+          </div>
+          ${buildPhotos(photos)}
+        </div>
+        <div class="report-sidebar">
+          ${sidebar}
+          <div class="card" id="past-reports-card" style="display:none">
+            <div class="card-head"><div class="card-head-dot"></div><div class="card-head-title">Past Reports</div></div>
+            <div id="past-reports-list"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Animate progress bars after render
+    requestAnimationFrame(() => {
+      document.querySelectorAll('.wp-bar-fill').forEach(el => {
+        el.style.width = el.dataset.pct + '%';
+      });
+    });
+
+    return report.id;
+  }
+
+  function openLightbox(src) {
+    document.getElementById('lightbox-img').src = src;
+    document.getElementById('lightbox').classList.add('open');
+  }
+
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('open');
+    document.getElementById('lightbox-img').src = '';
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+  async function loadPastReports(currentId) {
+    try {
+      const res = await fetch('/api/reports');
+      if (!res.ok) return;
+      const all = await res.json();
+      const past = all.filter(r => r.id !== currentId);
+      if (!past.length) return;
+
+      const list = past.map(r => `
+        <div class="past-item" onclick="loadReport('${r.id}')">
+          <span class="past-period">${r.period}</span>
+          <span class="past-arrow">→</span>
+        </div>
+      `).join('');
+
+      document.getElementById('past-reports-list').innerHTML = list;
+      document.getElementById('past-reports-card').style.display = '';
+    } catch {}
+  }
+
+  async function loadReport(id) {
+    document.getElementById('content').innerHTML = `<div class="loading-state"><div class="spinner"></div>Loading…</div>`;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    try {
+      const res = await fetch(`/api/reports?id=${id}`);
+      const report = await res.json();
+      if (report) {
+        const currentId = render(report);
+        loadPastReports(currentId);
+      }
+    } catch {
+      document.getElementById('content').innerHTML = `<div class="empty-state"><h2>Unable to load report</h2><p>Please refresh the page.</p></div>`;
+    }
+  }
+
+  async function init() {
+    try {
+      const res = await fetch('/api/reports?id=latest');
+      if (!res.ok) throw new Error();
+      const report = await res.json();
+      if (!report) {
+        document.getElementById('content').innerHTML = `
+          <div class="empty-state">
+            <h2>No reports published yet</h2>
+            <p>Check back soon for the latest construction updates.</p>
+          </div>`;
+        return;
+      }
+      const currentId = render(report);
+      loadPastReports(currentId);
+    } catch {
+      document.getElementById('content').innerHTML = `
+        <div class="empty-state">
+          <h2>Unable to load</h2>
+          <p>Please try refreshing the page.</p>
+        </div>`;
+    }
+  }
+
+  init();
+</script>
+
+</body>
+</html>
