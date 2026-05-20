@@ -657,9 +657,11 @@
     const { period, estimatedCompletion, workPackages, photos, synthesized, generatedAt } = report;
     const pct = overallPct(workPackages);
 
-    // Hero
-    const [month, year] = period.split(' ');
-    document.getElementById('hero-period').innerHTML = `${month} <span>${year || ''}</span>`;
+    // Hero — split on the last space so "19–25 May 2026" → ["19–25 May", "2026"]
+    const lastSpace = period.lastIndexOf(' ');
+    const heroMain = lastSpace > 0 ? period.slice(0, lastSpace) : period;
+    const heroYear = lastSpace > 0 ? period.slice(lastSpace + 1) : '';
+    document.getElementById('hero-period').innerHTML = `${heroMain} <span>${heroYear}</span>`;
     document.getElementById('hero-pct').textContent = pct + '%';
     document.getElementById('hero-completion').textContent = estimatedCompletion || '—';
     document.getElementById('hero').style.display = '';
