@@ -225,15 +225,40 @@
       line-height: 1.55;
     }
 
-    .photo-row {
-      display: flex; gap: 0.5rem; margin-bottom: 0.5rem;
+    .photo-slot {
+      display: flex; align-items: center; gap: 0.75rem;
+      border: 1px solid var(--border); border-radius: 2px;
+      padding: 0.5rem 0.75rem; background: white;
+      margin-bottom: 0.5rem; min-height: 64px;
     }
-    .photo-row input { flex: 1; }
+
+    .photo-thumb {
+      width: 52px; height: 52px;
+      object-fit: cover; border-radius: 2px;
+      flex-shrink: 0; display: none;
+    }
+    .photo-thumb.visible { display: block; }
+
+    .photo-slot-info {
+      flex: 1; display: flex; flex-direction: column; gap: 0.2rem;
+    }
+
+    .photo-slot-name { font-size: 0.75rem; color: var(--text); }
+    .photo-slot-status { font-size: 0.68rem; color: var(--text-lt); }
+
+    .photo-pick-label {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      font-size: 0.72rem; color: var(--terra);
+      cursor: pointer; width: fit-content;
+    }
+    .photo-pick-label:hover { opacity: 0.75; }
+    .photo-pick-label input[type="file"] { display: none; }
 
     .btn-rm {
       padding: 0.4rem 0.65rem; font-size: 0.8rem;
       background: transparent; border: 1px solid var(--border);
       border-radius: 2px; cursor: pointer; color: var(--text-lt);
+      flex-shrink: 0;
       transition: color 0.2s, border-color 0.2s;
     }
     .btn-rm:hover { color: var(--red); border-color: var(--red); }
@@ -412,15 +437,23 @@
     <div class="card-head"><div class="card-dot"></div><div class="card-title">Site Photos</div></div>
     <div class="card-body">
       <div class="photo-note">
-        Paste Google Drive shareable links. In Google Drive: right-click a photo → <strong>Share</strong> → <strong>Copy link</strong>. Make sure access is set to "Anyone with the link."
+        Pick photos from your device — each uploads instantly and shows a thumbnail. Files are stored securely and linked in the report.
       </div>
       <div id="photo-list">
-        <div class="photo-row">
-          <input type="text" placeholder="https://drive.google.com/file/d/…/view?usp=sharing">
-          <button class="btn-rm" onclick="removePhoto(this)" title="Remove">×</button>
+        <div class="photo-slot" data-url="">
+          <img class="photo-thumb" alt="">
+          <div class="photo-slot-info">
+            <span class="photo-slot-name">No file chosen</span>
+            <label class="photo-pick-label">
+              ↑ Choose Photo
+              <input type="file" accept="image/*" onchange="handlePhotoFile(this)">
+            </label>
+            <span class="photo-slot-status"></span>
+          </div>
+          <button class="btn-rm" onclick="removePhotoSlot(this)" title="Remove">×</button>
         </div>
       </div>
-      <button class="btn-add" onclick="addPhoto()">+ Add photo URL</button>
+      <button class="btn-add" onclick="addPhotoSlot()">+ Add photo</button>
     </div>
   </div>
 
@@ -487,23 +520,91 @@
   }
 
   function getPhotos() {
-    return Array.from(document.querySelectorAll('#photo-list input'))
-      .map(el => el.value.trim()).filter(Boolean);
+    return Array.from(document.querySelectorAll('.photo-slot'))
+      .map(el => el.dataset.url).filter(Boolean);
   }
 
   /* ─── Photos ──────────────────────────────────────── */
-  function addPhoto() {
-    const row = document.createElement('div');
-    row.className = 'photo-row';
-    row.innerHTML = `<input type="text" placeholder="https://drive.google.com/file/d/…/view?usp=sharing">
-      <button class="btn-rm" onclick="removePhoto(this)" title="Remove">×</button>`;
-    document.getElementById('photo-list').appendChild(row);
+  function makeSlotHTML() {
+    return `<img class="photo-thumb" alt="">
+      <div class="photo-slot-info">
+        <span class="photo-slot-name">No file chosen</span>
+        <label class="photo-pick-label">
+          ↑ Choose Photo
+          <input type="file" accept="image/*" onchange="handlePhotoFile(this)">
+        </label>
+        <span class="photo-slot-status"></span>
+      </div>
+      <button class="btn-rm" onclick="removePhotoSlot(this)" title="Remove">×</button>`;
   }
 
-  function removePhoto(btn) {
-    const rows = document.querySelectorAll('.photo-row');
-    if (rows.length > 1) btn.closest('.photo-row').remove();
-    else btn.closest('.photo-row').querySelector('input').value = '';
+  function addPhotoSlot() {
+    const slot = document.createElement('div');
+    slot.className = 'photo-slot';
+    slot.dataset.url = '';
+    slot.innerHTML = makeSlotHTML();
+    document.getElementById('photo-list').appendChild(slot);
+  }
+
+  function removePhotoSlot(btn) {
+    const slots = document.querySelectorAll('.photo-slot');
+    if (slots.length > 1) {
+      btn.closest('.photo-slot').remove();
+    } else {
+      const slot = btn.closest('.photo-slot');
+      slot.dataset.url = '';
+      slot.innerHTML = makeSlotHTML();
+    }
+  }
+
+  async function uploadFile(file) {
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': file.type || 'application/octet-stream',
+        'X-Filename': encodeURIComponent(file.name),
+        'X-Password': adminPassword
+      },
+      body: file
+    });
+    if (!res.ok) throw new Error((await res.json()).error || 'Upload failed');
+    return (await res.json()).url;
+  }
+
+  async function handlePhotoFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const slot = input.closest('.photo-slot');
+    const thumb    = slot.querySelector('.photo-thumb');
+    const nameEl   = slot.querySelector('.photo-slot-name');
+    const statusEl = slot.querySelector('.photo-slot-status');
+    const pickLabel = slot.querySelector('.photo-pick-label');
+
+    thumb.src = URL.createObjectURL(file);
+    thumb.classList.add('visible');
+    nameEl.textContent = file.name;
+    statusEl.textContent = 'Uploading…';
+    statusEl.style.color = 'var(--text-lt)';
+    pickLabel.style.opacity = '0.4';
+    pickLabel.style.pointerEvents = 'none';
+    slot.dataset.url = '';
+
+    try {
+      const url = await uploadFile(file);
+      slot.dataset.url = url;
+      statusEl.textContent = '✓ Uploaded';
+      statusEl.style.color = 'var(--green)';
+      pickLabel.style.display = 'none';
+    } catch (err) {
+      thumb.classList.remove('visible');
+      thumb.src = '';
+      nameEl.textContent = 'Upload failed — try again';
+      statusEl.textContent = err.message;
+      statusEl.style.color = 'var(--red)';
+      pickLabel.style.opacity = '';
+      pickLabel.style.pointerEvents = '';
+    }
   }
 
   /* ─── Auth ────────────────────────────────────────── */
@@ -652,9 +753,8 @@
     document.getElementById('completion').value = '';
     document.querySelectorAll('#wp-container input').forEach(el => el.value = 0);
     document.getElementById('photo-list').innerHTML = `
-      <div class="photo-row">
-        <input type="text" placeholder="https://drive.google.com/file/d/…/view?usp=sharing">
-        <button class="btn-rm" onclick="removePhoto(this)" title="Remove">×</button>
+      <div class="photo-slot" data-url="">
+        ${makeSlotHTML()}
       </div>`;
     document.getElementById('preview-card').classList.remove('visible');
     document.getElementById('pub-btn').style.display = 'none';
