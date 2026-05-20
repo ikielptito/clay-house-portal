@@ -401,8 +401,8 @@
     <div class="card-body">
       <div class="field-row">
         <div class="field">
-          <label class="field-label">Report Period <span class="field-hint">(e.g. "March 2026")</span></label>
-          <input type="text" id="period" placeholder="March 2026">
+          <label class="field-label">Report Period <span class="field-hint">(e.g. "19–25 May 2026")</span></label>
+          <input type="text" id="period" placeholder="19–25 May 2026">
         </div>
         <div class="field">
           <label class="field-label">Estimated Completion</label>
@@ -419,7 +419,7 @@
       <div class="field">
         <label class="field-label">Raw Notes <span class="field-hint">— Claude will turn these into a polished report for buyers</span></label>
         <textarea id="raw-notes" rows="6"
-          placeholder="Describe what work was done this month. Include key milestones, completed items, and work in progress. Write freely — Claude will handle the polishing."></textarea>
+          placeholder="Describe what work was done this week. Include key milestones, completed items, and work in progress. Write freely — Claude will handle the polishing."></textarea>
       </div>
     </div>
   </div>
@@ -655,7 +655,7 @@
     const rawNotes = document.getElementById('raw-notes').value.trim();
     const comp     = document.getElementById('completion').value.trim();
 
-    if (!period)    return showStatus('Please enter the report period (e.g. "March 2026").', 'error');
+    if (!period)    return showStatus('Please enter the report period (e.g. "19–25 May 2026").', 'error');
     if (!rawNotes)  return showStatus('Please enter contractor notes before generating.', 'error');
     hideStatus();
 
