@@ -439,21 +439,11 @@
       <div class="photo-note">
         Pick photos from your device — each uploads instantly and shows a thumbnail. Files are stored securely and linked in the report.
       </div>
-      <div id="photo-list">
-        <div class="photo-slot" data-url="">
-          <img class="photo-thumb" alt="">
-          <div class="photo-slot-info">
-            <span class="photo-slot-name">No file chosen</span>
-            <label class="photo-pick-label">
-              ↑ Choose Photo
-              <input type="file" accept="image/*" onchange="handlePhotoFile(this)">
-            </label>
-            <span class="photo-slot-status"></span>
-          </div>
-          <button class="btn-rm" onclick="removePhotoSlot(this)" title="Remove">×</button>
-        </div>
-      </div>
-      <button class="btn-add" onclick="addPhotoSlot()">+ Add photo</button>
+      <div id="photo-list"></div>
+      <label class="btn-add" style="cursor:pointer">
+        + Add photos
+        <input type="file" accept="image/*" multiple style="display:none" onchange="handlePhotoPicker(this)">
+      </label>
     </div>
   </div>
 
@@ -525,36 +515,8 @@
   }
 
   /* ─── Photos ──────────────────────────────────────── */
-  function makeSlotHTML() {
-    return `<img class="photo-thumb" alt="">
-      <div class="photo-slot-info">
-        <span class="photo-slot-name">No file chosen</span>
-        <label class="photo-pick-label">
-          ↑ Choose Photo
-          <input type="file" accept="image/*" onchange="handlePhotoFile(this)">
-        </label>
-        <span class="photo-slot-status"></span>
-      </div>
-      <button class="btn-rm" onclick="removePhotoSlot(this)" title="Remove">×</button>`;
-  }
-
-  function addPhotoSlot() {
-    const slot = document.createElement('div');
-    slot.className = 'photo-slot';
-    slot.dataset.url = '';
-    slot.innerHTML = makeSlotHTML();
-    document.getElementById('photo-list').appendChild(slot);
-  }
-
   function removePhotoSlot(btn) {
-    const slots = document.querySelectorAll('.photo-slot');
-    if (slots.length > 1) {
-      btn.closest('.photo-slot').remove();
-    } else {
-      const slot = btn.closest('.photo-slot');
-      slot.dataset.url = '';
-      slot.innerHTML = makeSlotHTML();
-    }
+    btn.closest('.photo-slot').remove();
   }
 
   async function uploadFile(file) {
@@ -571,40 +533,53 @@
     return (await res.json()).url;
   }
 
-  async function handlePhotoFile(input) {
-    const file = input.files[0];
-    if (!file) return;
-
-    const slot = input.closest('.photo-slot');
+  async function uploadToSlot(slot, file) {
     const thumb    = slot.querySelector('.photo-thumb');
     const nameEl   = slot.querySelector('.photo-slot-name');
     const statusEl = slot.querySelector('.photo-slot-status');
-    const pickLabel = slot.querySelector('.photo-pick-label');
 
     thumb.src = URL.createObjectURL(file);
     thumb.classList.add('visible');
     nameEl.textContent = file.name;
     statusEl.textContent = 'Uploading…';
     statusEl.style.color = 'var(--text-lt)';
-    pickLabel.style.opacity = '0.4';
-    pickLabel.style.pointerEvents = 'none';
-    slot.dataset.url = '';
 
     try {
       const url = await uploadFile(file);
       slot.dataset.url = url;
       statusEl.textContent = '✓ Uploaded';
       statusEl.style.color = 'var(--green)';
-      pickLabel.style.display = 'none';
     } catch (err) {
       thumb.classList.remove('visible');
       thumb.src = '';
       nameEl.textContent = 'Upload failed — try again';
       statusEl.textContent = err.message;
       statusEl.style.color = 'var(--red)';
-      pickLabel.style.opacity = '';
-      pickLabel.style.pointerEvents = '';
     }
+  }
+
+  async function handlePhotoPicker(input) {
+    const files = Array.from(input.files);
+    input.value = '';
+    if (!files.length) return;
+
+    const list = document.getElementById('photo-list');
+    const slots = files.map(file => {
+      const slot = document.createElement('div');
+      slot.className = 'photo-slot';
+      slot.dataset.url = '';
+      slot.innerHTML = `
+        <img class="photo-thumb" alt="">
+        <div class="photo-slot-info">
+          <span class="photo-slot-name"></span>
+          <span class="photo-slot-status"></span>
+        </div>
+        <button class="btn-rm" onclick="removePhotoSlot(this)" title="Remove">×</button>`;
+      list.appendChild(slot);
+      return { slot, file };
+    });
+
+    await Promise.all(slots.map(({ slot, file }) => uploadToSlot(slot, file)));
   }
 
   /* ─── Auth ────────────────────────────────────────── */
@@ -752,10 +727,7 @@
     document.getElementById('raw-notes').value = '';
     document.getElementById('completion').value = '';
     document.querySelectorAll('#wp-container input').forEach(el => el.value = 0);
-    document.getElementById('photo-list').innerHTML = `
-      <div class="photo-slot" data-url="">
-        ${makeSlotHTML()}
-      </div>`;
+    document.getElementById('photo-list').innerHTML = '';
     document.getElementById('preview-card').classList.remove('visible');
     document.getElementById('pub-btn').style.display = 'none';
     const genBtn = document.getElementById('gen-btn');
