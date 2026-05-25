@@ -19,10 +19,12 @@ module.exports = async function handler(req, res) {
     .map(([k, v]) => `  - ${k}: ${v}%`)
     .join('\n');
 
-  const message = await client.messages.create({
-    model: 'claude-opus-4-5',
-    max_tokens: 1024,
-    system: `You write weekly construction progress reports for buyers of The Clay House Cepaka, a luxury villa in Bali. Transform the contractor's raw notes into a polished, professional update — warm, clear, and reassuring in tone.
+  let message;
+  try {
+    message = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      system: `You write weekly construction progress reports for buyers of The Clay House Cepaka, a luxury villa in Bali. Transform the contractor's raw notes into a polished, professional update — warm, clear, and reassuring in tone.
 
 Return ONLY valid JSON, no other text, in exactly this structure:
 {
@@ -39,14 +41,18 @@ Guidelines:
 - Be positive but accurate; do not invent facts.
 - Bullets should be concise (one line each).
 - Omit a section's array entry if there is nothing genuine to put in it.`,
-    messages: [{
-      role: 'user',
-      content: `Report period: ${period}
+      messages: [{
+        role: 'user',
+        content: `Report period: ${period}
 Estimated completion: ${estimatedCompletion || 'not specified'}
 Work package completion:\n${wpSummary}
 Contractor notes: ${rawNotes}`
-    }]
-  });
+      }]
+    });
+  } catch (err) {
+    console.error('Anthropic API error:', err);
+    return res.status(502).json({ error: 'Failed to contact AI service: ' + (err.message || 'Unknown error') });
+  }
 
   const text = message.content[0].text.trim();
   let synthesized;
@@ -55,7 +61,11 @@ Contractor notes: ${rawNotes}`
   } catch {
     const match = text.match(/\{[\s\S]*\}/);
     if (match) {
-      synthesized = JSON.parse(match[0]);
+      try {
+        synthesized = JSON.parse(match[0]);
+      } catch {
+        return res.status(500).json({ error: 'Failed to parse Claude response' });
+      }
     } else {
       return res.status(500).json({ error: 'Failed to parse Claude response' });
     }
