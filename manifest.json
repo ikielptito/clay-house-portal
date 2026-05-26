@@ -1,0 +1,18 @@
+{
+  "name": "The Clay House · Progress Portal",
+  "short_name": "Clay House",
+  "description": "Construction progress updates for The Clay House Cepaka, Bali.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#1b2b38",
+  "theme_color": "#1b2b38",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

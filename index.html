@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Clay House · Construction Progress</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1b2b38">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Clay House">
+  <link rel="apple-touch-icon" href="/icons/icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
@@ -497,6 +503,116 @@
       color: var(--text-light);
     }
 
+    /* ─── MILESTONE TRACKER ──────────────────────────── */
+    .milestone-list {
+      padding: 1.2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .milestone-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      position: relative;
+    }
+
+    .milestone-spine {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+      width: 18px;
+    }
+
+    .milestone-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: white;
+      flex-shrink: 0;
+      margin-top: 2px;
+      transition: all 0.3s;
+    }
+
+    .milestone-dot.complete { background: var(--navy); border-color: var(--navy); }
+    .milestone-dot.active   { background: var(--terra); border-color: var(--terra); }
+
+    .milestone-line {
+      width: 2px;
+      flex: 1;
+      min-height: 28px;
+      background: var(--border);
+      margin: 3px 0;
+    }
+
+    .milestone-line.complete { background: var(--navy); }
+
+    .milestone-row:last-child .milestone-line { display: none; }
+
+    .milestone-content {
+      flex: 1;
+      padding-bottom: 1.1rem;
+    }
+
+    .milestone-row:last-child .milestone-content { padding-bottom: 0; }
+
+    .milestone-name {
+      font-size: 0.8rem;
+      color: var(--text);
+      font-weight: 400;
+      line-height: 1.2;
+    }
+
+    .milestone-name.dim { color: var(--text-light); font-weight: 300; }
+
+    .milestone-tag {
+      display: inline-block;
+      margin-top: 0.2rem;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 500;
+      padding: 0.15rem 0.45rem;
+      border-radius: 2px;
+    }
+
+    .milestone-tag.complete  { background: #e8f0f8; color: var(--navy); }
+    .milestone-tag.active    { background: #fdf0eb; color: var(--terra); }
+    .milestone-tag.upcoming  { background: var(--blush); color: var(--text-light); }
+
+    /* ─── TREND CHART ─────────────────────────────────── */
+    .chart-wrap {
+      padding: 1rem 1.2rem 0.5rem;
+    }
+
+    .chart-legend {
+      display: flex;
+      gap: 1.2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .chart-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-mid);
+    }
+
+    .chart-legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .chart-svg { width: 100%; display: block; overflow: visible; }
+
     /* ─── FOOTER ──────────────────────────────────────── */
     footer {
       background: var(--navy);
@@ -580,10 +696,18 @@
 
 <script>
   const WORK_PACKAGES = [
-    { category: 'Foundation',         items: ['Preparation', 'Soil Work', 'Stonework'] },
-    { category: 'Structure',          items: ['Concrete Work Structure', 'Pool Structure', 'Ground Tank & Deep-well'] },
-    { category: 'Finishing',          items: ['Wall Finishing', 'Floor Finishing', 'Door & Window Installation', 'Plumbing Installation', 'Sanitary Installation', 'Electrical Work'] },
+    { category: 'Foundation',           items: ['Preparation', 'Soil Work', 'Stonework'] },
+    { category: 'Structure',            items: ['Concrete Work Structure', 'Pool Structure', 'Ground Tank & Deep-well'] },
+    { category: 'Finishing',            items: ['Wall Finishing', 'Floor Finishing', 'Door & Window Installation', 'Plumbing Installation', 'Sanitary Installation', 'Electrical Work'] },
     { category: 'Furnishing & Fit-Out', items: ['Fit-Out', 'Furnishing'] }
+  ];
+
+  const MILESTONES = [
+    { label: 'Foundation',        items: ['Preparation', 'Soil Work', 'Stonework'] },
+    { label: 'Structure',         items: ['Concrete Work Structure', 'Pool Structure', 'Ground Tank & Deep-well'] },
+    { label: 'Finishing',         items: ['Wall Finishing', 'Floor Finishing', 'Door & Window Installation', 'Plumbing Installation', 'Sanitary Installation', 'Electrical Work'] },
+    { label: 'Fit-Out & Furnishing', items: ['Fit-Out', 'Furnishing'] },
+    { label: 'Handover',          items: [] }  // complete when all above are complete
   ];
 
   function driveUrl(url) {
@@ -599,6 +723,120 @@
   }
 
   const CONSTRUCTION_CATEGORIES = ['Foundation', 'Structure', 'Finishing'];
+
+  // ─── Milestone tracker ────────────────────────────────────────────────────
+  function buildMilestones(wp) {
+    const statuses = MILESTONES.map((m, i) => {
+      if (m.items.length === 0) {
+        // Handover: complete only if all other milestones are complete
+        const allDone = MILESTONES.slice(0, -1).every(prev =>
+          prev.items.every(item => getPct(wp, item) === 100)
+        );
+        return allDone ? 'complete' : 'upcoming';
+      }
+      const avg = Math.round(m.items.reduce((s, item) => s + getPct(wp, item), 0) / m.items.length);
+      if (avg === 100) return 'complete';
+      if (avg > 0)    return 'active';
+      return 'upcoming';
+    });
+
+    const rows = MILESTONES.map((m, i) => {
+      const s = statuses[i];
+      const tagText  = s === 'complete' ? 'Complete' : s === 'active' ? 'In Progress' : 'Upcoming';
+      const lineClass = statuses[i] === 'complete' ? 'complete' : '';
+      return `
+        <div class="milestone-row">
+          <div class="milestone-spine">
+            <div class="milestone-dot ${s}"></div>
+            <div class="milestone-line ${lineClass}"></div>
+          </div>
+          <div class="milestone-content">
+            <div class="milestone-name ${s === 'upcoming' ? 'dim' : ''}">${m.label}</div>
+            <span class="milestone-tag ${s}">${tagText}</span>
+          </div>
+        </div>`;
+    }).join('');
+
+    return `<div class="card">
+      <div class="card-head"><div class="card-head-dot"></div><div class="card-head-title">Build Milestones</div></div>
+      <div class="milestone-list">${rows}</div>
+    </div>`;
+  }
+
+  // ─── Trend chart ─────────────────────────────────────────────────────────
+  function shortPeriod(period) {
+    // "19–25 May 2026" → "19 May"
+    const parts = period.split(' ');
+    if (parts.length >= 2) {
+      const day = parts[0].split('–')[0].split('-')[0];
+      return `${day} ${parts[1]}`;
+    }
+    return period.slice(0, 8);
+  }
+
+  function buildTrendChart(reports) {
+    // reports: newest-first array of {id, period, cPct, oPct}
+    // Take up to 8, reverse to oldest-first for left→right reading
+    const data = reports
+      .filter(r => r.cPct !== undefined && r.oPct !== undefined)
+      .slice(0, 8)
+      .reverse();
+
+    if (data.length < 2) return '';
+
+    const W = 280, H = 130;
+    const mt = 10, mb = 38, ml = 28, mr = 10;
+    const pw = W - ml - mr;
+    const ph = H - mt - mb;
+
+    const xOf = i => ml + (data.length > 1 ? i * pw / (data.length - 1) : pw / 2);
+    const yOf = v => mt + ph - (v / 100) * ph;
+
+    // Grid lines
+    let gridLines = '';
+    [25, 50, 75, 100].forEach(v => {
+      const y = yOf(v);
+      gridLines += `<line x1="${ml}" y1="${y}" x2="${W - mr}" y2="${y}"
+        stroke="#ede4d9" stroke-width="1"/>
+        <text x="${ml - 4}" y="${y + 4}" font-size="8" fill="#96a8b4"
+          text-anchor="end">${v}</text>`;
+    });
+
+    // Polylines
+    const cPoints = data.map((r, i) => `${xOf(i)},${yOf(r.cPct)}`).join(' ');
+    const oPoints = data.map((r, i) => `${xOf(i)},${yOf(r.oPct)}`).join(' ');
+
+    // Dots
+    let dots = '';
+    data.forEach((r, i) => {
+      dots += `<circle cx="${xOf(i)}" cy="${yOf(r.cPct)}" r="3" fill="#1b2b38"/>`;
+      dots += `<circle cx="${xOf(i)}" cy="${yOf(r.oPct)}" r="3" fill="#b8684a"/>`;
+    });
+
+    // X-axis labels
+    let xLabels = '';
+    data.forEach((r, i) => {
+      xLabels += `<text x="${xOf(i)}" y="${H - 2}" font-size="8" fill="#96a8b4"
+        text-anchor="middle" transform="rotate(-35 ${xOf(i)} ${H - 2})">${shortPeriod(r.period)}</text>`;
+    });
+
+    return `<div class="card">
+      <div class="card-head"><div class="card-head-dot"></div><div class="card-head-title">Progress Over Time</div></div>
+      <div class="chart-wrap">
+        <div class="chart-legend">
+          <span class="chart-legend-item"><span class="chart-legend-dot" style="background:var(--navy)"></span>Construction</span>
+          <span class="chart-legend-item"><span class="chart-legend-dot" style="background:var(--terra)"></span>Overall</span>
+        </div>
+        <svg class="chart-svg" viewBox="0 0 ${W} ${H}">
+          ${gridLines}
+          <polyline points="${cPoints}" fill="none" stroke="#1b2b38" stroke-width="2" stroke-linejoin="round"/>
+          <polyline points="${oPoints}" fill="none" stroke="#b8684a" stroke-width="2" stroke-linejoin="round"/>
+          ${dots}
+          ${xLabels}
+        </svg>
+      </div>
+    </div>`;
+  }
 
   function constructionPct(wp) {
     let sum = 0, n = 0;
@@ -724,6 +962,7 @@
       <div class="report-grid">
         <div class="report-main">
           ${buildComments(synthesized)}
+          ${buildMilestones(workPackages)}
           <div class="card">
             <div class="card-head"><div class="card-head-dot"></div><div class="card-head-title">Overview &amp; Status of Work-Packages</div></div>
             <div>${buildWorkPackages(workPackages)}</div>
@@ -732,6 +971,7 @@
         </div>
         <div class="report-sidebar">
           ${sidebar}
+          <div id="trend-chart-slot"></div>
           <div class="card" id="past-reports-card" style="display:none">
             <div class="card-head"><div class="card-head-dot"></div><div class="card-head-title">Past Reports</div></div>
             <div id="past-reports-list"></div>
@@ -767,6 +1007,15 @@
       const res = await fetch('/api/reports');
       if (!res.ok) return;
       const all = await res.json();
+
+      // Trend chart — uses all reports (including current)
+      const chartSlot = document.getElementById('trend-chart-slot');
+      if (chartSlot) {
+        const chartHtml = buildTrendChart(all);
+        if (chartHtml) chartSlot.innerHTML = chartHtml;
+      }
+
+      // Past reports list — excludes current
       const past = all.filter(r => r.id !== currentId);
       if (!past.length) return;
 
@@ -822,6 +1071,11 @@
   }
 
   init();
+
+  // Register service worker for PWA / offline support
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
 </script>
 
 </body>

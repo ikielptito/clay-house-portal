@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin · Clay House Portal</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1b2b38">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Clay House Admin">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
@@ -596,6 +600,8 @@
         adminPassword = pw;
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('admin-wrap').classList.add('visible');
+        attachDraftListeners();
+        restoreDraft();
       } else {
         document.getElementById('pw-err').style.display = 'block';
       }
@@ -713,12 +719,64 @@
 
       showStatus(`✓ Report for "${pendingReport.period}" has been published. Buyers can now view it on the portal.`, 'success');
       pubBtn.style.display = 'none';
+      clearDraft();
 
     } catch (err) {
       showStatus(`Error publishing: ${err.message}`, 'error');
       pubBtn.disabled = false;
       pubBtn.textContent = 'Publish to Buyer Portal →';
     }
+  }
+
+  /* ─── Draft auto-save ────────────────────────────── */
+  const DRAFT_KEY = 'clay_house_draft';
+
+  function saveDraft() {
+    if (!adminPassword) return; // don't save before login
+    const wp = {};
+    document.querySelectorAll('#wp-container input[data-item]').forEach(el => {
+      wp[el.dataset.item] = el.value;
+    });
+    const draft = {
+      period:     document.getElementById('period').value,
+      rawNotes:   document.getElementById('raw-notes').value,
+      completion: document.getElementById('completion').value,
+      workPackages: wp
+    };
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); } catch {}
+  }
+
+  function restoreDraft() {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw);
+      if (draft.period)     document.getElementById('period').value     = draft.period;
+      if (draft.rawNotes)   document.getElementById('raw-notes').value  = draft.rawNotes;
+      if (draft.completion) document.getElementById('completion').value = draft.completion;
+      if (draft.workPackages) {
+        document.querySelectorAll('#wp-container input[data-item]').forEach(el => {
+          if (draft.workPackages[el.dataset.item] !== undefined) {
+            el.value = draft.workPackages[el.dataset.item];
+          }
+        });
+      }
+      // Show a soft indicator that draft was restored
+      showStatus('Draft restored — your previous inputs have been loaded.', 'success');
+      setTimeout(hideStatus, 3500);
+    } catch {}
+  }
+
+  function clearDraft() {
+    try { localStorage.removeItem(DRAFT_KEY); } catch {}
+  }
+
+  // Attach auto-save listeners after login
+  function attachDraftListeners() {
+    ['period', 'raw-notes', 'completion'].forEach(id => {
+      document.getElementById(id).addEventListener('input', saveDraft);
+    });
+    document.getElementById('wp-container').addEventListener('input', saveDraft);
   }
 
   /* ─── Reset ───────────────────────────────────────── */
@@ -736,6 +794,7 @@
     genBtn.childNodes[1].nodeValue = ' Generate Report with Claude';
     hideStatus();
     pendingReport = null;
+    clearDraft();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 </script>
