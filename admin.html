@@ -63,9 +63,9 @@
     .header-sub   { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--terra); margin-top: 1px; }
 
     .kaya-logo-header {
-      height: 13px; width: auto;
-      filter: brightness(0) invert(1);
-      opacity: 0.45; display: block; margin-top: 3px;
+      height: 16px; width: auto;
+      display: block; margin-top: 3px;
+      opacity: 0.8;
     }
 
     .header-link {
@@ -481,6 +481,9 @@
     <button class="btn btn-navy" id="pub-btn" style="display:none" onclick="publishReport()">
       Publish to Buyer Portal →
     </button>
+    <button class="btn btn-ghost" id="notify-btn" style="display:none" onclick="sendNotification()">
+      📲 Send WhatsApp Update
+    </button>
   </div>
 
 </div>
@@ -614,6 +617,7 @@
         document.getElementById('admin-wrap').classList.add('visible');
         attachDraftListeners();
         restoreDraft();
+        document.getElementById('notify-btn').style.display = '';
       } else {
         document.getElementById('pw-err').style.display = 'block';
       }
@@ -732,6 +736,7 @@
       showStatus(`✓ Report for "${pendingReport.period}" has been published. Buyers can now view it on the portal.`, 'success');
       pubBtn.style.display = 'none';
       clearDraft();
+      document.getElementById('notify-btn').style.display = '';
 
     } catch (err) {
       showStatus(`Error publishing: ${err.message}`, 'error');
@@ -789,6 +794,31 @@
       document.getElementById(id).addEventListener('input', saveDraft);
     });
     document.getElementById('wp-container').addEventListener('input', saveDraft);
+  }
+
+  /* ─── Notify ─────────────────────────────────────── */
+  async function sendNotification() {
+    const btn = document.getElementById('notify-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    try {
+      const res = await fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || 'Failed');
+      const failNote = data.failed?.length
+        ? ` (${data.failed.length} failed)`
+        : '';
+      showStatus(`✓ WhatsApp sent to ${data.sent} of ${data.total} buyers for "${data.period}".${failNote}`, 'success');
+      btn.textContent = '✓ WhatsApp Sent';
+    } catch (err) {
+      showStatus(`WhatsApp error: ${err.message}`, 'error');
+      btn.disabled = false;
+      btn.textContent = '📲 Send WhatsApp Update';
+    }
   }
 
   /* ─── Reset ───────────────────────────────────────── */
