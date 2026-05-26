@@ -483,6 +483,9 @@
     <button class="btn btn-ghost" id="notify-btn" style="display:none" onclick="sendNotification()">
       📲 Send WhatsApp Update
     </button>
+    <button class="btn btn-ghost btn-sm" id="wa-test-btn" style="display:none" onclick="runWaTest()">
+      🔍 WA Diagnostic
+    </button>
   </div>
 
 </div>
@@ -617,6 +620,7 @@
         attachDraftListeners();
         restoreDraft();
         document.getElementById('notify-btn').style.display = '';
+        document.getElementById('wa-test-btn').style.display = '';
       } else {
         document.getElementById('pw-err').style.display = 'block';
       }
@@ -793,6 +797,27 @@
       document.getElementById(id).addEventListener('input', saveDraft);
     });
     document.getElementById('wp-container').addEventListener('input', saveDraft);
+  }
+
+  /* ─── WA Diagnostic ──────────────────────────────── */
+  async function runWaTest() {
+    const btn = document.getElementById('wa-test-btn');
+    btn.disabled = true;
+    btn.textContent = 'Testing…';
+    try {
+      const res = await fetch('/api/wa-test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword })
+      });
+      const data = await res.json();
+      const msg = JSON.stringify(data, null, 2);
+      showStatus(`WA Diagnostic:\n${msg}`, data.metaResponse?.messages ? 'success' : 'error');
+    } catch (err) {
+      showStatus(`Diagnostic error: ${err.message}`, 'error');
+    }
+    btn.disabled = false;
+    btn.textContent = '🔍 WA Diagnostic';
   }
 
   /* ─── Notify ─────────────────────────────────────── */
