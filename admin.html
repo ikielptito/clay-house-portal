@@ -62,10 +62,14 @@
     .header-title { font-size: 0.85rem; color: rgba(255,255,255,0.8); letter-spacing: 0.06em; }
     .header-sub   { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--terra); margin-top: 1px; }
 
-    .kaya-logo-header {
-      height: 16px; width: auto;
-      display: block; margin-top: 3px;
-      opacity: 0.8;
+    .kaya-admin-byline {
+      display: flex; align-items: center; gap: 0.4rem; margin-top: 4px;
+    }
+    .kaya-logo-header { height: 14px; width: auto; display: block; }
+    .kaya-admin-text {
+      font-size: 0.62rem; font-weight: 500;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--terra);
     }
 
     .header-link {
@@ -378,7 +382,10 @@
     <div>
       <div class="header-title">Contractor Admin</div>
       <div class="header-sub">Report Builder</div>
-      <img src="/icons/kaya.png" alt="KAYA Developments" class="kaya-logo-header">
+      <div class="kaya-admin-byline">
+        <img src="/icons/kaya.png" alt="KAYA" class="kaya-logo-header">
+        <span class="kaya-admin-text">KAYA Developments</span>
+      </div>
     </div>
   </div>
   <a href="/" class="header-link">← Buyer Portal</a>
