@@ -37,7 +37,6 @@ async function sendWhatsApp(phone, period, cPct, oPct) {
   const phoneId      = process.env.WHATSAPP_PHONE_NUMBER_ID;
   const token        = process.env.WHATSAPP_ACCESS_TOKEN;
   const templateName = process.env.WHATSAPP_TEMPLATE_NAME || 'clay_house_progress_update';
-  const portalUrl    = process.env.PORTAL_URL || 'https://clay-house-portal.vercel.app';
 
   if (!phoneId || !token) return;
 
@@ -63,8 +62,7 @@ async function sendWhatsApp(phone, period, cPct, oPct) {
             parameters: [
               { type: 'text', text: period },
               { type: 'text', text: `${cPct}%` },
-              { type: 'text', text: `${oPct}%` },
-              { type: 'text', text: portalUrl }
+              { type: 'text', text: `${oPct}%` }
             ]
           }]
         }
