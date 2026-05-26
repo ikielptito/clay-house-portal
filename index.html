@@ -412,27 +412,43 @@
     }
 
     /* ─── SIDEBAR ─────────────────────────────────────── */
-    .overall-ring-wrap {
+    .dual-ring-wrap {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      padding: 1.75rem 1.5rem;
+    }
+
+    .ring-item {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.75rem;
-      padding: 1.75rem 1.5rem;
+      gap: 0.5rem;
     }
 
     .ring-svg { display: block; }
 
     .ring-label {
       font-size: 0.6rem;
-      letter-spacing: 0.2em;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
       color: var(--text-light);
       text-align: center;
     }
 
+    .ring-sublabel {
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-light);
+      opacity: 0.65;
+      text-align: center;
+      margin-top: -0.3rem;
+    }
+
     .ring-pct {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 2.4rem;
+      font-size: 1.9rem;
       color: var(--navy);
       font-weight: 300;
       line-height: 1;
@@ -528,7 +544,11 @@
     <div class="hero-period" id="hero-period"></div>
     <div class="hero-meta">
       <div class="hero-stat">
-        <div class="hero-stat-label">Overall Progress</div>
+        <div class="hero-stat-label">Construction</div>
+        <div class="hero-stat-value" id="hero-construction-pct">—</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-label">Overall</div>
         <div class="hero-stat-value" id="hero-pct">—</div>
       </div>
       <div class="hero-stat">
@@ -578,6 +598,17 @@
     return parseInt(wp[item] ?? 0) || 0;
   }
 
+  const CONSTRUCTION_CATEGORIES = ['Foundation', 'Structure', 'Finishing'];
+
+  function constructionPct(wp) {
+    let sum = 0, n = 0;
+    for (const cat of WORK_PACKAGES) {
+      if (!CONSTRUCTION_CATEGORIES.includes(cat.category)) continue;
+      for (const item of cat.items) { sum += getPct(wp, item); n++; }
+    }
+    return n ? Math.round(sum / n) : 0;
+  }
+
   function overallPct(wp) {
     let sum = 0, n = 0;
     for (const cat of WORK_PACKAGES)
@@ -585,10 +616,11 @@
     return n ? Math.round(sum / n) : 0;
   }
 
-  function buildRing(pct) {
-    const r = 46, cx = 54, cy = 54, circ = 2 * Math.PI * r;
+  function buildRing(pct, size = 108) {
+    const r = size * 0.426, cx = size / 2, cy = size / 2;
+    const circ = 2 * Math.PI * r;
     const fill = circ * (pct / 100);
-    return `<svg class="ring-svg" width="108" height="108" viewBox="0 0 108 108">
+    return `<svg class="ring-svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#ede4d9" stroke-width="6"/>
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#b8684a" stroke-width="6"
         stroke-dasharray="${fill} ${circ}" stroke-dashoffset="${circ * 0.25}"
@@ -655,24 +687,35 @@
 
   function render(report) {
     const { period, estimatedCompletion, workPackages, photos, synthesized, generatedAt } = report;
-    const pct = overallPct(workPackages);
+    const cPct = constructionPct(workPackages);
+    const oPct = overallPct(workPackages);
 
     // Hero — split on the last space so "19–25 May 2026" → ["19–25 May", "2026"]
     const lastSpace = period.lastIndexOf(' ');
     const heroMain = lastSpace > 0 ? period.slice(0, lastSpace) : period;
     const heroYear = lastSpace > 0 ? period.slice(lastSpace + 1) : '';
     document.getElementById('hero-period').innerHTML = `${heroMain} <span>${heroYear}</span>`;
-    document.getElementById('hero-pct').textContent = pct + '%';
+    document.getElementById('hero-construction-pct').textContent = cPct + '%';
+    document.getElementById('hero-pct').textContent = oPct + '%';
     document.getElementById('hero-completion').textContent = estimatedCompletion || '—';
     document.getElementById('hero').style.display = '';
 
     const sidebar = `
       <div class="card">
-        <div class="card-head"><div class="card-head-dot"></div><div class="card-head-title">Overall Completion</div></div>
-        <div class="overall-ring-wrap">
-          ${buildRing(pct)}
-          <div class="ring-pct">${pct}%</div>
-          <div class="ring-label">Across all work packages</div>
+        <div class="card-head"><div class="card-head-dot"></div><div class="card-head-title">Project Completion</div></div>
+        <div class="dual-ring-wrap">
+          <div class="ring-item">
+            ${buildRing(cPct, 90)}
+            <div class="ring-pct">${cPct}%</div>
+            <div class="ring-label">Construction</div>
+            <div class="ring-sublabel">Excl. fit-out</div>
+          </div>
+          <div class="ring-item">
+            ${buildRing(oPct, 90)}
+            <div class="ring-pct">${oPct}%</div>
+            <div class="ring-label">Overall</div>
+            <div class="ring-sublabel">All packages</div>
+          </div>
         </div>
       </div>
     `;
