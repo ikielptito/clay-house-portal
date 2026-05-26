@@ -808,8 +808,13 @@
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || 'Failed');
+
+      if (data.sent === 0 && data.failed?.length) {
+        const reason = data.failed[0]?.error || 'Unknown error';
+        throw new Error(`All messages failed. First error: ${reason}`);
+      }
       const failNote = data.failed?.length
-        ? ` (${data.failed.length} failed)`
+        ? ` (${data.failed.length} failed: ${data.failed[0]?.error})`
         : '';
       showStatus(`✓ WhatsApp sent to ${data.sent} of ${data.total} buyers for "${data.period}".${failNote}`, 'success');
       btn.textContent = '✓ WhatsApp Sent';
