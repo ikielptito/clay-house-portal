@@ -90,14 +90,37 @@
       font-size: 1.35rem;
       color: white;
       letter-spacing: 0.08em;
+      line-height: 1.1;
     }
 
     .logo-text p {
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       letter-spacing: 0.2em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.42);
-      margin-top: 1px;
+      color: rgba(255,255,255,0.38);
+      margin-top: 2px;
+    }
+
+    .kaya-byline {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-top: 4px;
+    }
+
+    .byline-text {
+      font-size: 0.55rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+    }
+
+    .kaya-logo-header {
+      height: 16px;
+      width: auto;
+      filter: brightness(0) invert(1);
+      opacity: 0.55;
+      display: block;
     }
 
     .header-badge {
@@ -108,6 +131,7 @@
       border: 1px solid rgba(184,104,74,0.4);
       padding: 0.35rem 0.75rem;
       border-radius: 2px;
+      white-space: nowrap;
     }
 
     /* ─── HERO STRIP ──────────────────────────────────── */
@@ -616,12 +640,45 @@
     /* ─── FOOTER ──────────────────────────────────────── */
     footer {
       background: var(--navy);
-      color: rgba(255,255,255,0.25);
-      text-align: center;
-      padding: 1.5rem;
-      font-size: 0.65rem;
+      padding: 2rem 2rem 1.5rem;
+    }
+
+    .footer-inner {
+      max-width: 1140px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .footer-divider {
+      width: 1px;
+      height: 28px;
+      background: rgba(255,255,255,0.12);
+    }
+
+    .kaya-logo-footer {
+      height: 28px;
+      width: auto;
+      filter: brightness(0) invert(1);
+      opacity: 0.45;
+      display: block;
+    }
+
+    .footer-copy {
+      font-size: 0.62rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
+      color: rgba(255,255,255,0.2);
+      text-align: right;
     }
 
     /* ─── RESPONSIVE ──────────────────────────────────── */
@@ -629,12 +686,69 @@
       .report-grid { grid-template-columns: 1fr; }
       .hero-period { font-size: 2rem; }
       .hero-meta { gap: 1.5rem; }
+      main { padding: 1.5rem 1rem 3rem; }
     }
 
-    @media (max-width: 540px) {
+    @media (max-width: 680px) {
+      /* Header */
+      .header-inner { padding: 0 1rem; height: 60px; }
+      .logo-mark { width: 36px; height: 36px; }
+      .logo-mark span { font-size: 6px; }
+      .logo { gap: 0.75rem; }
+      .kaya-byline { display: none; }
+
+      /* Hero */
+      .hero-inner { padding: 1.5rem 1rem; flex-wrap: wrap; gap: 1rem; }
+      .hero-period { font-size: 1.6rem; width: 100%; }
+      .hero-meta { gap: 1.25rem; }
+      .hero-stat-value { font-size: 1.2rem; }
+
+      /* Cards */
+      .card-body { padding: 1rem; }
+      .card-head { padding: 0.6rem 1rem; }
+
+      /* Work packages */
+      .wp-row td { padding: 0.5rem 0.75rem; font-size: 0.75rem; }
+      .wp-category { padding: 0.4rem 0.75rem; }
+
+      /* Rings */
+      .dual-ring-wrap { gap: 1rem; padding: 1.25rem 1rem; }
+
+      /* Milestones */
+      .milestone-list { padding: 1rem; }
+
+      /* Footer */
+      .footer-inner { flex-direction: column; align-items: flex-start; gap: 1rem; }
+      .footer-copy { text-align: left; }
+    }
+
+    @media (max-width: 480px) {
+      /* Header — hide subtext, keep logo tight */
+      .logo-text p { display: none; }
+      .logo-text h1 { font-size: 1.1rem; }
+      .header-badge { font-size: 0.55rem; padding: 0.3rem 0.55rem; letter-spacing: 0.1em; }
+
+      /* Hero — stack everything */
       .hero-inner { flex-direction: column; align-items: flex-start; }
-      .hero-meta { flex-direction: row; gap: 2rem; }
+      .hero-meta { flex-direction: row; flex-wrap: wrap; gap: 1rem 1.5rem; }
       .hero-stat { text-align: left; }
+
+      /* Work packages — stack label and bar */
+      .wp-row { display: block; }
+      .wp-row td { display: block; padding: 0.25rem 0.75rem; }
+      .wp-row td:first-child { padding-bottom: 0; font-size: 0.78rem; }
+      .wp-row td:last-child { padding-top: 0.2rem; }
+      .wp-table, .wp-table tbody { display: block; }
+      .wp-table tr.wp-row { border-bottom: 1px solid #f0ebe3; padding: 0.4rem 0; }
+
+      /* Rings — slightly smaller */
+      .ring-pct { font-size: 1.6rem; }
+
+      /* Narrative */
+      .narrative { font-size: 1rem; }
+
+      /* Detail list */
+      .detail-list li { font-size: 0.8rem; }
     }
   </style>
 </head>
@@ -649,6 +763,10 @@
       <div class="logo-text">
         <h1>The Clay House</h1>
         <p>Cepaka · Bali, Indonesia</p>
+        <div class="kaya-byline">
+          <span class="byline-text">by</span>
+          <img src="/icons/kaya.png" alt="KAYA Developments" class="kaya-logo-header">
+        </div>
       </div>
     </div>
     <div class="header-badge">Construction Progress</div>
@@ -685,7 +803,14 @@
 </main>
 
 <footer>
-  The Clay House Cepaka &nbsp;·&nbsp; Construction Progress Portal &nbsp;·&nbsp; Confidential to Unit Holders
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <img src="/icons/kaya.png" alt="KAYA Developments" class="kaya-logo-footer">
+      <div class="footer-divider"></div>
+      <span class="footer-copy">The Clay House Cepaka<br>A KAYA Developments Project</span>
+    </div>
+    <div class="footer-copy">Construction Progress Portal &nbsp;·&nbsp; Confidential to Unit Holders</div>
+  </div>
 </footer>
 
 <!-- Lightbox -->
