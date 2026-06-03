@@ -778,7 +778,7 @@
         <div class="hero-stat-value" id="hero-construction-pct">—</div>
       </div>
       <div class="hero-stat">
-        <div class="hero-stat-label">Overall</div>
+        <div class="hero-stat-label">Buildings</div>
         <div class="hero-stat-value" id="hero-pct">—</div>
       </div>
       <div class="hero-stat">
@@ -816,7 +816,7 @@
 <script>
   const WORK_PACKAGES = [
     { category: 'Buildings',     items: ['B1', 'B2', 'A1', 'A2'] },
-    { category: 'Common Areas',  items: ['Swimming Pool', 'Ground Tank', 'Outdoor'] }
+    { category: 'Common Areas',  items: ['Swimming Pool', 'Ground Tank', 'Outdoor', 'Sanitary'] }
   ];
 
   // Contract values (IDR) from CV. Lina Jaya — used for value-weighted progress
@@ -827,11 +827,13 @@
     'A2':            834263427,
     'Swimming Pool': 264784325,
     'Ground Tank':   117294918,
-    'Outdoor':       996908647
+    'Outdoor':       996908647,
+    'Sanitary':       14904000   // 4 units × IDR 3,726,000
   };
 
-  const BUILDING_ITEMS = ['B1', 'B2', 'A1', 'A2'];
-  const ALL_ITEMS      = [...BUILDING_ITEMS, 'Swimming Pool', 'Ground Tank', 'Outdoor'];
+  const BUILDING_ITEMS      = ['B1', 'B2', 'A1', 'A2'];
+  const CONSTRUCTION_ITEMS  = [...BUILDING_ITEMS, 'Swimming Pool', 'Ground Tank', 'Outdoor', 'Sanitary'];
+  const ALL_ITEMS            = CONSTRUCTION_ITEMS; // expands when furnishing/landscaping added
 
   const MILESTONES = [
     { label: 'Structural Work',    threshold: 50,  items: BUILDING_ITEMS },
@@ -971,7 +973,7 @@
     </div>`;
   }
 
-  function constructionPct(wp) { return weightedPct(wp, BUILDING_ITEMS); }
+  function constructionPct(wp) { return weightedPct(wp, CONSTRUCTION_ITEMS); }
   function overallPct(wp)       { return weightedPct(wp, ALL_ITEMS); }
 
   function buildRing(pct, size = 108) {
@@ -1068,13 +1070,13 @@
             ${buildRing(cPct, 90)}
             <div class="ring-pct">${cPct}%</div>
             <div class="ring-label">Construction</div>
-            <div class="ring-sublabel">Excl. fit-out</div>
+            <div class="ring-sublabel">All contractor works</div>
           </div>
           <div class="ring-item">
-            ${buildRing(oPct, 90)}
-            <div class="ring-pct">${oPct}%</div>
-            <div class="ring-label">Overall</div>
-            <div class="ring-sublabel">All packages</div>
+            ${buildRing(weightedPct(workPackages, BUILDING_ITEMS), 90)}
+            <div class="ring-pct">${weightedPct(workPackages, BUILDING_ITEMS)}%</div>
+            <div class="ring-label">Buildings</div>
+            <div class="ring-sublabel">B1 · B2 · A1 · A2</div>
           </div>
         </div>
       </div>

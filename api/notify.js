@@ -13,11 +13,13 @@ const CONTRACT_VALUES = {
   'A2':            834263427,
   'Swimming Pool': 264784325,
   'Ground Tank':   117294918,
-  'Outdoor':       996908647
+  'Outdoor':       996908647,
+  'Sanitary':       14904000
 };
 
-const BUILDING_ITEMS = ['B1', 'B2', 'A1', 'A2'];
-const ALL_ITEMS = [...BUILDING_ITEMS, 'Swimming Pool', 'Ground Tank', 'Outdoor'];
+const BUILDING_ITEMS     = ['B1', 'B2', 'A1', 'A2'];
+const CONSTRUCTION_ITEMS = [...BUILDING_ITEMS, 'Swimming Pool', 'Ground Tank', 'Outdoor', 'Sanitary'];
+const ALL_ITEMS          = CONSTRUCTION_ITEMS;
 
 function getPct(wp, item) { return parseFloat(wp?.[item] ?? 0) || 0; }
 
@@ -99,7 +101,7 @@ module.exports = async function handler(req, res) {
   if (cPct === undefined || oPct === undefined) {
     const report = await redis.get(`report:${id}`);
     if (report) {
-      cPct = weightedPct(report.workPackages, BUILDING_ITEMS);
+      cPct = weightedPct(report.workPackages, CONSTRUCTION_ITEMS);
       oPct = weightedPct(report.workPackages, ALL_ITEMS);
     }
   }
