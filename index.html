@@ -777,8 +777,8 @@
         <div class="hero-stat-label">Construction</div>
         <div class="hero-stat-value" id="hero-construction-pct">—</div>
       </div>
-      <div class="hero-stat">
-        <div class="hero-stat-label">Buildings</div>
+      <div class="hero-stat" id="hero-overall-stat" style="display:none">
+        <div class="hero-stat-label">Overall</div>
         <div class="hero-stat-value" id="hero-pct">—</div>
       </div>
       <div class="hero-stat">
@@ -835,12 +835,9 @@
   const CONSTRUCTION_ITEMS  = [...BUILDING_ITEMS, 'Swimming Pool', 'Ground Tank', 'Outdoor', 'Sanitary'];
   const ALL_ITEMS            = CONSTRUCTION_ITEMS; // expands when furnishing/landscaping added
 
-  // Display label overrides
-  const UNIT_LABELS = { 'A2': 'Unit 8' };
-  const label = key => UNIT_LABELS[key] || key;
-
-  // Furnishing & Fit-Out tracked per unit, independently of contractor BOQ
-  const FF_UNITS = ['B1', 'B2', 'A1', 'A2'];
+  // Furnishing & Fit-Out: individual residential units, tracked independently
+  // Mapping: A2=Units 1&2, A1=Units 3&4, B2=Units 5&6, B1=Unit 8
+  const FF_UNITS = ['Unit 1','Unit 2','Unit 3','Unit 4','Unit 5','Unit 6','Unit 8'];
   const FF_ITEMS = FF_UNITS.flatMap(u => [`${u} Furnishing`, `${u} Fit-Out`]);
 
   function driveUrl(url) {
@@ -965,11 +962,11 @@
     </svg>`;
   }
 
-  function wpRow(item, pct, delay = 0) {
+  function wpRow(item, pct, delay = 0, displayName = null) {
     const done    = pct >= 100;
     const display = pct === 0 ? '—' : (pct % 1 === 0 ? `${pct}%` : `${pct.toFixed(2)}%`);
     return `<tr class="wp-row" style="animation-delay:${delay}s">
-      <td>${label(item)}</td>
+      <td>${displayName || item}</td>
       <td>
         <div class="wp-bar-wrap">
           <div class="wp-bar-track">
@@ -984,7 +981,7 @@
   function buildWorkPackages(wp) {
     let html = '<table class="wp-table"><tbody>';
 
-    // ── Construction (contractor scope) ──────────────────────────────────
+    // ── Construction (contractor scope, block names unchanged) ───────────
     for (const cat of WORK_PACKAGES) {
       html += `<tr><td class="wp-category" colspan="2">${cat.category}</td></tr>`;
       cat.items.forEach((item, i) => {
@@ -992,14 +989,13 @@
       });
     }
 
-    // ── Furnishing & Fit-Out (per unit, tracked independently) ───────────
-    const hasFf = FF_ITEMS.some(k => getPct(wp, k) > 0);
+    // ── Furnishing & Fit-Out (per residential unit, tracked independently)
     html += `<tr><td class="wp-category" colspan="2">Furnishing &amp; Fit-Out</td></tr>`;
     FF_UNITS.forEach((unit, i) => {
       const fur = getPct(wp, `${unit} Furnishing`);
       const fit = getPct(wp, `${unit} Fit-Out`);
-      html += wpRow(`${label(unit)} — Furnishing`, fur, i * 0.04);
-      html += wpRow(`${label(unit)} — Fit-Out`,    fit, i * 0.04 + 0.02);
+      html += wpRow(`${unit} Furnishing`, fur, i * 0.04);
+      html += wpRow(`${unit} Fit-Out`,    fit, i * 0.04 + 0.02);
     });
 
     html += '</tbody></table>';
@@ -1041,8 +1037,9 @@
 
   function render(report) {
     const { period, estimatedCompletion, workPackages, photos, synthesized, generatedAt } = report;
-    const cPct = constructionPct(workPackages);
-    const oPct = overallPct(workPackages);
+    const cPct  = constructionPct(workPackages);
+    const oPct  = overallPct(workPackages);
+    const hasFf = FF_ITEMS.some(k => getPct(workPackages, k) > 0);
 
     // Hero — split on the last space so "19–25 May 2026" → ["19–25 May", "2026"]
     const lastSpace = period.lastIndexOf(' ');
@@ -1050,7 +1047,10 @@
     const heroYear = lastSpace > 0 ? period.slice(lastSpace + 1) : '';
     document.getElementById('hero-period').innerHTML = `${heroMain} <span>${heroYear}</span>`;
     document.getElementById('hero-construction-pct').textContent = cPct.toFixed(2) + '%';
-    document.getElementById('hero-pct').textContent = oPct.toFixed(2) + '%';
+    if (hasFf) {
+      document.getElementById('hero-pct').textContent = oPct.toFixed(2) + '%';
+      document.getElementById('hero-overall-stat').style.display = '';
+    }
 
     document.getElementById('hero-completion').textContent = estimatedCompletion || '—';
     document.getElementById('hero').style.display = '';
@@ -1060,17 +1060,18 @@
         <div class="card-head"><div class="card-head-dot"></div><div class="card-head-title">Project Completion</div></div>
         <div class="dual-ring-wrap">
           <div class="ring-item">
-            ${buildRing(cPct, 90)}
+            ${buildRing(cPct, hasFf ? 90 : 108)}
             <div class="ring-pct">${cPct.toFixed(2)}%</div>
             <div class="ring-label">Construction</div>
             <div class="ring-sublabel">All contractor works</div>
           </div>
+          ${hasFf ? `
           <div class="ring-item">
             ${buildRing(oPct, 90)}
             <div class="ring-pct">${oPct.toFixed(2)}%</div>
             <div class="ring-label">Overall</div>
             <div class="ring-sublabel">Incl. furnishing</div>
-          </div>
+          </div>` : ''}
         </div>
       </div>
     `;

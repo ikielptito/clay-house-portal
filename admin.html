@@ -491,15 +491,13 @@
 </div>
 
 <script>
-  const UNIT_LABELS = { 'A2': 'Unit 8' };
-  const label = k => UNIT_LABELS[k] || k;
-
   const WORK_PACKAGES = [
     { category: 'Buildings',     items: ['B1', 'B2', 'A1', 'A2'] },
     { category: 'Common Areas',  items: ['Swimming Pool', 'Ground Tank', 'Outdoor', 'Sanitary'] }
   ];
 
-  const FF_UNITS = ['B1', 'B2', 'A1', 'A2'];
+  // F&F tracked per residential unit: A2=1,2  A1=3,4  B2=5,6  B1=8
+  const FF_UNITS = ['Unit 1','Unit 2','Unit 3','Unit 4','Unit 5','Unit 6','Unit 8'];
   const FF_PACKAGES = [
     { category: 'Furnishing & Fit-Out', items: FF_UNITS.flatMap(u => [`${u} Furnishing`, `${u} Fit-Out`]) }
   ];
@@ -518,9 +516,7 @@
         html += '<div class="wp-grid">';
         for (const item of cat.items) {
           const id = 'wp__' + item.replace(/[^a-zA-Z0-9]/g, '_');
-          const displayLabel = item
-            .replace(/^A2 /, 'Unit 8 ')
-            .replace(/^A2$/, 'Unit 8');
+          const displayLabel = item;
           html += `<div class="wp-item">
             <span class="wp-item-label">${displayLabel}</span>
             <input type="number" id="${id}" data-item="${item}" min="0" max="100" step="0.01" value="0">
