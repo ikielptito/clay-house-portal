@@ -492,10 +492,8 @@
 
 <script>
   const WORK_PACKAGES = [
-    { category: 'Foundation',         items: ['Preparation', 'Soil Work', 'Stonework'] },
-    { category: 'Structure',          items: ['Concrete Work Structure', 'Pool Structure', 'Ground Tank & Deep-well'] },
-    { category: 'Finishing',          items: ['Wall Finishing', 'Floor Finishing', 'Door & Window Installation', 'Plumbing Installation', 'Sanitary Installation', 'Electrical Work'] },
-    { category: 'Furnishing & Fit-Out', items: ['Fit-Out', 'Furnishing'] }
+    { category: 'Buildings', items: ['B1', 'B2', 'A1', 'A2'] },
+    { category: 'Common Areas', items: ['Swimming Pool', 'Ground Tank', 'Outdoor'] }
   ];
 
   let adminPassword = '';
@@ -512,7 +510,7 @@
         const id = 'wp__' + item.replace(/[^a-zA-Z0-9]/g, '_');
         html += `<div class="wp-item">
           <span class="wp-item-label">${item}</span>
-          <input type="number" id="${id}" data-item="${item}" min="0" max="100" value="0">
+          <input type="number" id="${id}" data-item="${item}" min="0" max="100" step="0.01" value="0">
           <span class="wp-item-suffix">%</span>
         </div>`;
       }
@@ -525,7 +523,7 @@
   function getWpValues() {
     const result = {};
     document.querySelectorAll('#wp-container input[data-item]').forEach(el => {
-      result[el.dataset.item] = parseInt(el.value) || 0;
+      result[el.dataset.item] = parseFloat(el.value) || 0;
     });
     return result;
   }

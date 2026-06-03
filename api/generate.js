@@ -16,7 +16,7 @@ module.exports = async function handler(req, res) {
   }
 
   const wpSummary = Object.entries(workPackages || {})
-    .map(([k, v]) => `  - ${k}: ${v}%`)
+    .map(([k, v]) => `  - ${k}: ${parseFloat(v).toFixed(2)}%`)
     .join('\n');
 
   let message;

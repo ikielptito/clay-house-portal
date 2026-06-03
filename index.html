@@ -815,18 +815,30 @@
 
 <script>
   const WORK_PACKAGES = [
-    { category: 'Foundation',           items: ['Preparation', 'Soil Work', 'Stonework'] },
-    { category: 'Structure',            items: ['Concrete Work Structure', 'Pool Structure', 'Ground Tank & Deep-well'] },
-    { category: 'Finishing',            items: ['Wall Finishing', 'Floor Finishing', 'Door & Window Installation', 'Plumbing Installation', 'Sanitary Installation', 'Electrical Work'] },
-    { category: 'Furnishing & Fit-Out', items: ['Fit-Out', 'Furnishing'] }
+    { category: 'Buildings',     items: ['B1', 'B2', 'A1', 'A2'] },
+    { category: 'Common Areas',  items: ['Swimming Pool', 'Ground Tank', 'Outdoor'] }
   ];
 
+  // Contract values (IDR) from CV. Lina Jaya — used for value-weighted progress
+  const CONTRACT_VALUES = {
+    'B1':            807424241,
+    'B2':            807424241,
+    'A1':            810369944,
+    'A2':            834263427,
+    'Swimming Pool': 264784325,
+    'Ground Tank':   117294918,
+    'Outdoor':       996908647
+  };
+
+  const BUILDING_ITEMS = ['B1', 'B2', 'A1', 'A2'];
+  const ALL_ITEMS      = [...BUILDING_ITEMS, 'Swimming Pool', 'Ground Tank', 'Outdoor'];
+
   const MILESTONES = [
-    { label: 'Foundation',        items: ['Preparation', 'Soil Work', 'Stonework'] },
-    { label: 'Structure',         items: ['Concrete Work Structure', 'Pool Structure', 'Ground Tank & Deep-well'] },
-    { label: 'Finishing',         items: ['Wall Finishing', 'Floor Finishing', 'Door & Window Installation', 'Plumbing Installation', 'Sanitary Installation', 'Electrical Work'] },
-    { label: 'Fit-Out & Furnishing', items: ['Fit-Out', 'Furnishing'] },
-    { label: 'Handover',          items: [] }  // complete when all above are complete
+    { label: 'Structural Work',    threshold: 50,  items: BUILDING_ITEMS },
+    { label: 'Finishing Stage',    threshold: 80,  items: BUILDING_ITEMS },
+    { label: 'Buildings Complete', threshold: 100, items: BUILDING_ITEMS },
+    { label: 'Common Areas Complete', threshold: 100, items: ['Swimming Pool', 'Ground Tank', 'Outdoor'] },
+    { label: 'Handover',           threshold: 100, items: ALL_ITEMS }
   ];
 
   function driveUrl(url) {
@@ -838,24 +850,26 @@
 
   function getPct(wp, item) {
     if (!wp) return 0;
-    return parseInt(wp[item] ?? 0) || 0;
+    return parseFloat(wp[item] ?? 0) || 0;
   }
 
-  const CONSTRUCTION_CATEGORIES = ['Foundation', 'Structure', 'Finishing'];
+  function weightedPct(wp, items) {
+    let weightedSum = 0, totalWeight = 0;
+    for (const item of items) {
+      const w = CONTRACT_VALUES[item] || 1;
+      weightedSum += getPct(wp, item) * w;
+      totalWeight += w;
+    }
+    return totalWeight ? Math.round(weightedSum / totalWeight * 10) / 10 : 0;
+  }
 
   // ─── Milestone tracker ────────────────────────────────────────────────────
   function buildMilestones(wp) {
-    const statuses = MILESTONES.map((m, i) => {
-      if (m.items.length === 0) {
-        // Handover: complete only if all other milestones are complete
-        const allDone = MILESTONES.slice(0, -1).every(prev =>
-          prev.items.every(item => getPct(wp, item) === 100)
-        );
-        return allDone ? 'complete' : 'upcoming';
-      }
-      const avg = Math.round(m.items.reduce((s, item) => s + getPct(wp, item), 0) / m.items.length);
-      if (avg === 100) return 'complete';
-      if (avg > 0)    return 'active';
+    const statuses = MILESTONES.map(m => {
+      const allMet = m.items.every(item => getPct(wp, item) >= m.threshold);
+      const anyStarted = m.items.some(item => getPct(wp, item) > 0);
+      if (allMet)       return 'complete';
+      if (anyStarted)   return 'active';
       return 'upcoming';
     });
 
@@ -957,21 +971,8 @@
     </div>`;
   }
 
-  function constructionPct(wp) {
-    let sum = 0, n = 0;
-    for (const cat of WORK_PACKAGES) {
-      if (!CONSTRUCTION_CATEGORIES.includes(cat.category)) continue;
-      for (const item of cat.items) { sum += getPct(wp, item); n++; }
-    }
-    return n ? Math.round(sum / n) : 0;
-  }
-
-  function overallPct(wp) {
-    let sum = 0, n = 0;
-    for (const cat of WORK_PACKAGES)
-      for (const item of cat.items) { sum += getPct(wp, item); n++; }
-    return n ? Math.round(sum / n) : 0;
-  }
+  function constructionPct(wp) { return weightedPct(wp, BUILDING_ITEMS); }
+  function overallPct(wp)       { return weightedPct(wp, ALL_ITEMS); }
 
   function buildRing(pct, size = 108) {
     const r = size * 0.426, cx = size / 2, cy = size / 2;
@@ -990,8 +991,9 @@
     for (const cat of WORK_PACKAGES) {
       html += `<tr><td class="wp-category" colspan="2">${cat.category}</td></tr>`;
       cat.items.forEach((item, i) => {
-        const pct = getPct(wp, item);
-        const done = pct === 100;
+        const pct  = getPct(wp, item);
+        const done = pct >= 100;
+        const display = pct % 1 === 0 ? `${pct}%` : `${pct.toFixed(2)}%`;
         html += `<tr class="wp-row" style="animation-delay:${i * 0.04}s">
           <td>${item}</td>
           <td>
@@ -999,7 +1001,7 @@
               <div class="wp-bar-track">
                 <div class="wp-bar-fill ${done ? 'done' : ''}" style="width:0%" data-pct="${pct}"></div>
               </div>
-              <span class="wp-pct">${pct}%</span>
+              <span class="wp-pct">${display}</span>
             </div>
           </td>
         </tr>`;
@@ -1054,6 +1056,7 @@
     document.getElementById('hero-period').innerHTML = `${heroMain} <span>${heroYear}</span>`;
     document.getElementById('hero-construction-pct').textContent = cPct + '%';
     document.getElementById('hero-pct').textContent = oPct + '%';
+
     document.getElementById('hero-completion').textContent = estimatedCompletion || '—';
     document.getElementById('hero').style.display = '';
 

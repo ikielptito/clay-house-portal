@@ -5,31 +5,31 @@ const redis = new Redis({
   token: process.env.KV_REST_API_TOKEN
 });
 
-// ─── Percentage helpers (mirrors index.html logic) ───────────────────────────
-const WORK_PACKAGES = [
-  { category: 'Foundation',           items: ['Preparation', 'Soil Work', 'Stonework'] },
-  { category: 'Structure',            items: ['Concrete Work Structure', 'Pool Structure', 'Ground Tank & Deep-well'] },
-  { category: 'Finishing',            items: ['Wall Finishing', 'Floor Finishing', 'Door & Window Installation', 'Plumbing Installation', 'Sanitary Installation', 'Electrical Work'] },
-  { category: 'Furnishing & Fit-Out', items: ['Fit-Out', 'Furnishing'] }
-];
-const CONSTRUCTION_CATS = ['Foundation', 'Structure', 'Finishing'];
+// Contract values from CV. Lina Jaya progress report (IDR)
+// Used for value-weighted progress calculations to match contractor figures
+const CONTRACT_VALUES = {
+  'B1':            807424241,
+  'B2':            807424241,
+  'A1':            810369944,
+  'A2':            834263427,
+  'Swimming Pool': 264784325,
+  'Ground Tank':   117294918,
+  'Outdoor':       996908647
+};
 
-function getPct(wp, item) { return parseInt(wp?.[item] ?? 0) || 0; }
+const BUILDING_ITEMS = ['B1', 'B2', 'A1', 'A2'];
+const ALL_ITEMS = [...BUILDING_ITEMS, 'Swimming Pool', 'Ground Tank', 'Outdoor'];
 
-function calcConstructionPct(wp) {
-  let sum = 0, n = 0;
-  for (const cat of WORK_PACKAGES) {
-    if (!CONSTRUCTION_CATS.includes(cat.category)) continue;
-    for (const item of cat.items) { sum += getPct(wp, item); n++; }
+function getPct(wp, item) { return parseFloat(wp?.[item] ?? 0) || 0; }
+
+function weightedPct(wp, items) {
+  let weightedSum = 0, totalWeight = 0;
+  for (const item of items) {
+    const w = CONTRACT_VALUES[item] || 1;
+    weightedSum += getPct(wp, item) * w;
+    totalWeight += w;
   }
-  return n ? Math.round(sum / n) : 0;
-}
-
-function calcOverallPct(wp) {
-  let sum = 0, n = 0;
-  for (const cat of WORK_PACKAGES)
-    for (const item of cat.items) { sum += getPct(wp, item); n++; }
-  return n ? Math.round(sum / n) : 0;
+  return totalWeight ? Math.round(weightedSum / totalWeight) : 0;
 }
 
 // ─── WhatsApp ─────────────────────────────────────────────────────────────────
@@ -91,26 +91,16 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid report' });
   }
 
-  const cPct = calcConstructionPct(report.workPackages);
-  const oPct = calcOverallPct(report.workPackages);
+  const wp   = report.workPackages || {};
+  const cPct = weightedPct(wp, BUILDING_ITEMS);
+  const oPct = weightedPct(wp, ALL_ITEMS);
 
-  // Store full report
   await redis.set(`report:${report.id}`, report);
-
-  // Prepend to index — include percentages so the trend chart doesn't
-  // need to fetch every full report individually
   await redis.lpush('report:index', JSON.stringify({
-    id:     report.id,
-    period: report.period,
-    cPct,
-    oPct
+    id: report.id, period: report.period, cPct, oPct
   }));
 
-  // Fire WhatsApp notifications (failures logged, never thrown)
-  const buyers = (process.env.BUYER_WHATSAPP_NUMBERS || '')
-    .split(',')
-    .filter(Boolean);
-
+  const buyers = (process.env.BUYER_WHATSAPP_NUMBERS || '').split(',').filter(Boolean);
   if (buyers.length) {
     await Promise.all(buyers.map(phone =>
       sendWhatsApp(phone, report.period, cPct, oPct)
