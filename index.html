@@ -835,13 +835,13 @@
   const CONSTRUCTION_ITEMS  = [...BUILDING_ITEMS, 'Swimming Pool', 'Ground Tank', 'Outdoor', 'Sanitary'];
   const ALL_ITEMS            = CONSTRUCTION_ITEMS; // expands when furnishing/landscaping added
 
-  const MILESTONES = [
-    { label: 'Structural Work',    threshold: 50,  items: BUILDING_ITEMS },
-    { label: 'Finishing Stage',    threshold: 80,  items: BUILDING_ITEMS },
-    { label: 'Buildings Complete', threshold: 100, items: BUILDING_ITEMS },
-    { label: 'Common Areas Complete', threshold: 100, items: ['Swimming Pool', 'Ground Tank', 'Outdoor'] },
-    { label: 'Handover',           threshold: 100, items: ALL_ITEMS }
-  ];
+  // Display label overrides
+  const UNIT_LABELS = { 'A2': 'Unit 8' };
+  const label = key => UNIT_LABELS[key] || key;
+
+  // Furnishing & Fit-Out tracked per unit, independently of contractor BOQ
+  const FF_UNITS = ['B1', 'B2', 'A1', 'A2'];
+  const FF_ITEMS = FF_UNITS.flatMap(u => [`${u} Furnishing`, `${u} Fit-Out`]);
 
   function driveUrl(url) {
     if (!url) return url;
@@ -862,41 +862,9 @@
       weightedSum += getPct(wp, item) * w;
       totalWeight += w;
     }
-    return totalWeight ? Math.round(weightedSum / totalWeight * 10) / 10 : 0;
+    return totalWeight ? Math.round(weightedSum / totalWeight * 100) / 100 : 0;
   }
 
-  // ─── Milestone tracker ────────────────────────────────────────────────────
-  function buildMilestones(wp) {
-    const statuses = MILESTONES.map(m => {
-      const allMet = m.items.every(item => getPct(wp, item) >= m.threshold);
-      const anyStarted = m.items.some(item => getPct(wp, item) > 0);
-      if (allMet)       return 'complete';
-      if (anyStarted)   return 'active';
-      return 'upcoming';
-    });
-
-    const rows = MILESTONES.map((m, i) => {
-      const s = statuses[i];
-      const tagText  = s === 'complete' ? 'Complete' : s === 'active' ? 'In Progress' : 'Upcoming';
-      const lineClass = statuses[i] === 'complete' ? 'complete' : '';
-      return `
-        <div class="milestone-row">
-          <div class="milestone-spine">
-            <div class="milestone-dot ${s}"></div>
-            <div class="milestone-line ${lineClass}"></div>
-          </div>
-          <div class="milestone-content">
-            <div class="milestone-name ${s === 'upcoming' ? 'dim' : ''}">${m.label}</div>
-            <span class="milestone-tag ${s}">${tagText}</span>
-          </div>
-        </div>`;
-    }).join('');
-
-    return `<div class="card">
-      <div class="card-head"><div class="card-head-dot"></div><div class="card-head-title">Build Milestones</div></div>
-      <div class="milestone-list">${rows}</div>
-    </div>`;
-  }
 
   // ─── Trend chart ─────────────────────────────────────────────────────────
   function shortPeriod(period) {
@@ -974,7 +942,16 @@
   }
 
   function constructionPct(wp) { return weightedPct(wp, CONSTRUCTION_ITEMS); }
-  function overallPct(wp)       { return weightedPct(wp, ALL_ITEMS); }
+  function overallPct(wp) {
+    // Overall = construction items + furnishing & fit-out (simple avg per unit)
+    // Falls back to construction% until F&F data is entered
+    const hasFf = FF_ITEMS.some(k => getPct(wp, k) > 0);
+    if (!hasFf) return constructionPct(wp);
+    const cPct = constructionPct(wp);
+    const ffAvg = FF_ITEMS.reduce((s, k) => s + getPct(wp, k), 0) / FF_ITEMS.length;
+    // Weight construction at 75%, F&F at 25% of overall
+    return Math.round((cPct * 0.75 + ffAvg * 0.25) * 100) / 100;
+  }
 
   function buildRing(pct, size = 108) {
     const r = size * 0.426, cx = size / 2, cy = size / 2;
@@ -988,27 +965,43 @@
     </svg>`;
   }
 
+  function wpRow(item, pct, delay = 0) {
+    const done    = pct >= 100;
+    const display = pct === 0 ? '—' : (pct % 1 === 0 ? `${pct}%` : `${pct.toFixed(2)}%`);
+    return `<tr class="wp-row" style="animation-delay:${delay}s">
+      <td>${label(item)}</td>
+      <td>
+        <div class="wp-bar-wrap">
+          <div class="wp-bar-track">
+            <div class="wp-bar-fill ${done ? 'done' : ''}" style="width:0%" data-pct="${pct}"></div>
+          </div>
+          <span class="wp-pct">${display}</span>
+        </div>
+      </td>
+    </tr>`;
+  }
+
   function buildWorkPackages(wp) {
     let html = '<table class="wp-table"><tbody>';
+
+    // ── Construction (contractor scope) ──────────────────────────────────
     for (const cat of WORK_PACKAGES) {
       html += `<tr><td class="wp-category" colspan="2">${cat.category}</td></tr>`;
       cat.items.forEach((item, i) => {
-        const pct  = getPct(wp, item);
-        const done = pct >= 100;
-        const display = pct % 1 === 0 ? `${pct}%` : `${pct.toFixed(2)}%`;
-        html += `<tr class="wp-row" style="animation-delay:${i * 0.04}s">
-          <td>${item}</td>
-          <td>
-            <div class="wp-bar-wrap">
-              <div class="wp-bar-track">
-                <div class="wp-bar-fill ${done ? 'done' : ''}" style="width:0%" data-pct="${pct}"></div>
-              </div>
-              <span class="wp-pct">${display}</span>
-            </div>
-          </td>
-        </tr>`;
+        html += wpRow(item, getPct(wp, item), i * 0.04);
       });
     }
+
+    // ── Furnishing & Fit-Out (per unit, tracked independently) ───────────
+    const hasFf = FF_ITEMS.some(k => getPct(wp, k) > 0);
+    html += `<tr><td class="wp-category" colspan="2">Furnishing &amp; Fit-Out</td></tr>`;
+    FF_UNITS.forEach((unit, i) => {
+      const fur = getPct(wp, `${unit} Furnishing`);
+      const fit = getPct(wp, `${unit} Fit-Out`);
+      html += wpRow(`${label(unit)} — Furnishing`, fur, i * 0.04);
+      html += wpRow(`${label(unit)} — Fit-Out`,    fit, i * 0.04 + 0.02);
+    });
+
     html += '</tbody></table>';
     return html;
   }
@@ -1056,8 +1049,8 @@
     const heroMain = lastSpace > 0 ? period.slice(0, lastSpace) : period;
     const heroYear = lastSpace > 0 ? period.slice(lastSpace + 1) : '';
     document.getElementById('hero-period').innerHTML = `${heroMain} <span>${heroYear}</span>`;
-    document.getElementById('hero-construction-pct').textContent = cPct + '%';
-    document.getElementById('hero-pct').textContent = oPct + '%';
+    document.getElementById('hero-construction-pct').textContent = cPct.toFixed(2) + '%';
+    document.getElementById('hero-pct').textContent = oPct.toFixed(2) + '%';
 
     document.getElementById('hero-completion').textContent = estimatedCompletion || '—';
     document.getElementById('hero').style.display = '';
@@ -1068,15 +1061,15 @@
         <div class="dual-ring-wrap">
           <div class="ring-item">
             ${buildRing(cPct, 90)}
-            <div class="ring-pct">${cPct}%</div>
+            <div class="ring-pct">${cPct.toFixed(2)}%</div>
             <div class="ring-label">Construction</div>
             <div class="ring-sublabel">All contractor works</div>
           </div>
           <div class="ring-item">
-            ${buildRing(weightedPct(workPackages, BUILDING_ITEMS), 90)}
-            <div class="ring-pct">${weightedPct(workPackages, BUILDING_ITEMS)}%</div>
-            <div class="ring-label">Buildings</div>
-            <div class="ring-sublabel">B1 · B2 · A1 · A2</div>
+            ${buildRing(oPct, 90)}
+            <div class="ring-pct">${oPct.toFixed(2)}%</div>
+            <div class="ring-label">Overall</div>
+            <div class="ring-sublabel">Incl. furnishing</div>
           </div>
         </div>
       </div>
@@ -1086,7 +1079,6 @@
       <div class="report-grid">
         <div class="report-main">
           ${buildComments(synthesized)}
-          ${buildMilestones(workPackages)}
           <div class="card">
             <div class="card-head"><div class="card-head-dot"></div><div class="card-head-title">Overview &amp; Status of Work-Packages</div></div>
             <div>${buildWorkPackages(workPackages)}</div>

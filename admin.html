@@ -491,9 +491,17 @@
 </div>
 
 <script>
+  const UNIT_LABELS = { 'A2': 'Unit 8' };
+  const label = k => UNIT_LABELS[k] || k;
+
   const WORK_PACKAGES = [
     { category: 'Buildings',     items: ['B1', 'B2', 'A1', 'A2'] },
     { category: 'Common Areas',  items: ['Swimming Pool', 'Ground Tank', 'Outdoor', 'Sanitary'] }
+  ];
+
+  const FF_UNITS = ['B1', 'B2', 'A1', 'A2'];
+  const FF_PACKAGES = [
+    { category: 'Furnishing & Fit-Out', items: FF_UNITS.flatMap(u => [`${u} Furnishing`, `${u} Fit-Out`]) }
   ];
 
   let adminPassword = '';
@@ -503,19 +511,30 @@
   function buildWpInputs() {
     const container = document.getElementById('wp-container');
     let html = '';
-    for (const cat of WORK_PACKAGES) {
-      html += `<div class="wp-category-label">${cat.category}</div>`;
-      html += '<div class="wp-grid">';
-      for (const item of cat.items) {
-        const id = 'wp__' + item.replace(/[^a-zA-Z0-9]/g, '_');
-        html += `<div class="wp-item">
-          <span class="wp-item-label">${item}</span>
-          <input type="number" id="${id}" data-item="${item}" min="0" max="100" step="0.01" value="0">
-          <span class="wp-item-suffix">%</span>
-        </div>`;
+
+    const renderSection = (packages) => {
+      for (const cat of packages) {
+        html += `<div class="wp-category-label">${cat.category}</div>`;
+        html += '<div class="wp-grid">';
+        for (const item of cat.items) {
+          const id = 'wp__' + item.replace(/[^a-zA-Z0-9]/g, '_');
+          const displayLabel = item
+            .replace(/^A2 /, 'Unit 8 ')
+            .replace(/^A2$/, 'Unit 8');
+          html += `<div class="wp-item">
+            <span class="wp-item-label">${displayLabel}</span>
+            <input type="number" id="${id}" data-item="${item}" min="0" max="100" step="0.01" value="0">
+            <span class="wp-item-suffix">%</span>
+          </div>`;
+        }
+        html += '</div>';
       }
-      html += '</div>';
-    }
+    };
+
+    renderSection(WORK_PACKAGES);
+    html += '<div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border)"></div>';
+    renderSection(FF_PACKAGES);
+
     container.innerHTML = html;
   }
   buildWpInputs();
