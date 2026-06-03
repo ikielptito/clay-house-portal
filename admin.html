@@ -471,6 +471,25 @@
     <div class="preview-body" id="preview-body"></div>
   </div>
 
+  <!-- Edit Published Report -->
+  <div class="card" id="edit-report-card" style="display:none">
+    <div class="card-head"><div class="card-dot"></div><div class="card-title">Edit Published Report</div></div>
+    <div class="card-body">
+      <div class="field">
+        <label class="field-label">Select Report</label>
+        <select id="edit-report-select" onchange="loadReportForEdit(this.value)">
+          <option value="">— choose a report —</option>
+        </select>
+      </div>
+      <div id="edit-wp-container" style="display:none; margin-top:1rem">
+        <div id="edit-wp-inputs"></div>
+        <div style="display:flex; justify-content:flex-end; margin-top:1rem">
+          <button class="btn btn-terra btn-sm" id="edit-save-btn" onclick="saveReportEdits()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Actions -->
   <div class="actions">
     <button class="btn btn-ghost" onclick="resetForm()">Clear Form</button>
@@ -496,10 +515,10 @@
     { category: 'Common Areas',  items: ['Swimming Pool', 'Ground Tank', 'Outdoor', 'Sanitary'] }
   ];
 
-  // F&F tracked per residential unit: A2=1,2  A1=3,4  B2=5,6  B1=8
+  // F&F tracked per residential unit (one combined % per unit): A2=1,2  A1=3,4  B2=5,6  B1=8
   const FF_UNITS = ['Unit 1','Unit 2','Unit 3','Unit 4','Unit 5','Unit 6','Unit 8'];
   const FF_PACKAGES = [
-    { category: 'Furnishing & Fit-Out', items: FF_UNITS.flatMap(u => [`${u} Furnishing`, `${u} Fit-Out`]) }
+    { category: 'Furnishing & Fit-Out', items: FF_UNITS.map(u => `${u} F&F`) }
   ];
 
   let adminPassword = '';
@@ -634,6 +653,8 @@
         restoreDraft();
         document.getElementById('notify-btn').style.display = '';
         document.getElementById('wa-test-btn').style.display = '';
+        document.getElementById('edit-report-card').style.display = '';
+        loadReportList();
       } else {
         document.getElementById('pw-err').style.display = 'block';
       }
@@ -880,6 +901,88 @@
     pendingReport = null;
     clearDraft();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ─── Edit Published Report ───────────────────────── */
+  let editingReport = null;
+
+  async function loadReportList() {
+    try {
+      const res  = await fetch('/api/reports');
+      const list = await res.json();
+      const sel  = document.getElementById('edit-report-select');
+      sel.innerHTML = '<option value="">— choose a report —</option>';
+      list.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.id;
+        opt.textContent = r.period;
+        sel.appendChild(opt);
+      });
+    } catch {}
+  }
+
+  async function loadReportForEdit(id) {
+    if (!id) {
+      document.getElementById('edit-wp-container').style.display = 'none';
+      editingReport = null;
+      return;
+    }
+    try {
+      const res     = await fetch(`/api/reports?id=${id}`);
+      editingReport = await res.json();
+      renderEditInputs(editingReport.workPackages || {});
+      document.getElementById('edit-wp-container').style.display = '';
+    } catch {}
+  }
+
+  function renderEditInputs(wp) {
+    const allSections = [...WORK_PACKAGES, ...FF_PACKAGES];
+    let html = '';
+    for (const cat of allSections) {
+      html += `<div class="wp-category-label">${cat.category}</div>`;
+      html += '<div class="wp-grid">';
+      for (const item of cat.items) {
+        const val = parseFloat(wp[item] ?? 0) || 0;
+        const eid = 'edit__' + item.replace(/[^a-zA-Z0-9]/g, '_');
+        html += `<div class="wp-item">
+          <span class="wp-item-label">${item}</span>
+          <input type="number" id="${eid}" data-item="${item}"
+            min="0" max="100" step="0.01" value="${val}">
+          <span class="wp-item-suffix">%</span>
+        </div>`;
+      }
+      html += '</div>';
+    }
+    document.getElementById('edit-wp-inputs').innerHTML = html;
+  }
+
+  async function saveReportEdits() {
+    if (!editingReport) return;
+    const btn = document.getElementById('edit-save-btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    const wp = { ...(editingReport.workPackages || {}) };
+    document.querySelectorAll('#edit-wp-inputs input[data-item]').forEach(el => {
+      wp[el.dataset.item] = parseFloat(el.value) || 0;
+    });
+
+    try {
+      const res = await fetch('/api/edit-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword, id: editingReport.id, workPackages: wp })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || 'Save failed');
+      editingReport.workPackages = wp;
+      showStatus(`✓ "${editingReport.period}" saved. Buyers will see the updated figures.`, 'success');
+    } catch (err) {
+      showStatus(`Error saving: ${err.message}`, 'error');
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
   }
 </script>
 </body>
