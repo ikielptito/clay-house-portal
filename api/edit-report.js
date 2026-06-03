@@ -21,10 +21,11 @@ function weightedPct(wp, items) {
 }
 
 function calcOverall(wp) {
-  const hasFf = FF_UNITS.some(u => getPct(wp, `${u} FF`) > 0);
+  const ffOf  = u => Math.max(getPct(wp, `${u} FF`), getPct(wp, `${u} F&F`));
+  const hasFf = FF_UNITS.some(u => ffOf(u) > 0);
   const cPct  = weightedPct(wp, CONSTRUCTION_ITEMS);
   if (!hasFf) return cPct;
-  const ffAvg = FF_UNITS.reduce((s, u) => s + getPct(wp, `${u} FF`), 0) / FF_UNITS.length;
+  const ffAvg = FF_UNITS.reduce((s, u) => s + ffOf(u), 0) / FF_UNITS.length;
   return Math.round((cPct * 0.75 + ffAvg * 0.25) * 100) / 100;
 }
 

@@ -942,10 +942,11 @@
   function overallPct(wp) {
     // Overall = construction items + furnishing & fit-out (simple avg per unit)
     // Falls back to construction% until F&F data is entered
-    const hasFf = FF_UNITS.some(u => getPct(wp, `${u} FF`) > 0);
+    const ffOf = u => Math.max(getPct(wp, `${u} FF`), getPct(wp, `${u} F&F`));
+    const hasFf = FF_UNITS.some(u => ffOf(u) > 0);
     if (!hasFf) return constructionPct(wp);
     const cPct  = constructionPct(wp);
-    const ffAvg = FF_UNITS.reduce((s, u) => s + getPct(wp, `${u} FF`), 0) / FF_UNITS.length;
+    const ffAvg = FF_UNITS.reduce((s, u) => s + ffOf(u), 0) / FF_UNITS.length;
     return Math.round((cPct * 0.75 + ffAvg * 0.25) * 100) / 100;
   }
 
@@ -991,7 +992,8 @@
     // ── Furnishing & Fit-Out (per residential unit, tracked independently)
     html += `<tr><td class="wp-category" colspan="2">Furnishing &amp; Fit-Out</td></tr>`;
     FF_UNITS.forEach((unit, i) => {
-      html += wpRow(`${unit} FF`, getPct(wp, `${unit} FF`), i * 0.04, unit);
+      const pct = Math.max(getPct(wp, `${unit} FF`), getPct(wp, `${unit} F&F`));
+      html += wpRow(`${unit} FF`, pct, i * 0.04, unit);
     });
 
     html += '</tbody></table>';
@@ -1035,7 +1037,9 @@
     const { period, estimatedCompletion, workPackages, photos, synthesized, generatedAt } = report;
     const cPct  = constructionPct(workPackages);
     const oPct  = overallPct(workPackages);
-    const hasFf = FF_UNITS.some(u => getPct(workPackages, `${u} FF`) > 0);
+    const hasFf = FF_UNITS.some(u =>
+      Math.max(getPct(workPackages, `${u} FF`), getPct(workPackages, `${u} F&F`)) > 0
+    );
 
     // Hero — split on the last space so "19–25 May 2026" → ["19–25 May", "2026"]
     const lastSpace = period.lastIndexOf(' ');

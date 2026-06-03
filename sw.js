@@ -1,4 +1,4 @@
-const CACHE = 'clay-house-v1';
+const CACHE = 'clay-house-v2';
 const STATIC = ['/', '/manifest.json', '/icons/icon.svg'];
 
 self.addEventListener('install', e => {
