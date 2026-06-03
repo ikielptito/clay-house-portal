@@ -777,7 +777,7 @@
         <div class="hero-stat-label">Construction</div>
         <div class="hero-stat-value" id="hero-construction-pct">—</div>
       </div>
-      <div class="hero-stat" id="hero-overall-stat" style="display:none">
+      <div class="hero-stat">
         <div class="hero-stat-label">Overall</div>
         <div class="hero-stat-value" id="hero-pct">—</div>
       </div>
@@ -940,11 +940,9 @@
 
   function constructionPct(wp) { return weightedPct(wp, CONSTRUCTION_ITEMS); }
   function overallPct(wp) {
-    // Overall = construction items + furnishing & fit-out (simple avg per unit)
-    // Falls back to construction% until F&F data is entered
-    const ffOf = u => Math.max(getPct(wp, `${u} FF`), getPct(wp, `${u} F&F`));
-    const hasFf = FF_UNITS.some(u => ffOf(u) > 0);
-    if (!hasFf) return constructionPct(wp);
+    // Overall = construction (75%) + furnishing & fit-out avg (25%)
+    // F&F values default to 0 until entered, dragging the overall down
+    const ffOf  = u => Math.max(getPct(wp, `${u} FF`), getPct(wp, `${u} F&F`));
     const cPct  = constructionPct(wp);
     const ffAvg = FF_UNITS.reduce((s, u) => s + ffOf(u), 0) / FF_UNITS.length;
     return Math.round((cPct * 0.75 + ffAvg * 0.25) * 100) / 100;
@@ -1035,11 +1033,8 @@
 
   function render(report) {
     const { period, estimatedCompletion, workPackages, photos, synthesized, generatedAt } = report;
-    const cPct  = constructionPct(workPackages);
-    const oPct  = overallPct(workPackages);
-    const hasFf = FF_UNITS.some(u =>
-      Math.max(getPct(workPackages, `${u} FF`), getPct(workPackages, `${u} F&F`)) > 0
-    );
+    const cPct = constructionPct(workPackages);
+    const oPct = overallPct(workPackages);
 
     // Hero — split on the last space so "19–25 May 2026" → ["19–25 May", "2026"]
     const lastSpace = period.lastIndexOf(' ');
@@ -1047,10 +1042,7 @@
     const heroYear = lastSpace > 0 ? period.slice(lastSpace + 1) : '';
     document.getElementById('hero-period').innerHTML = `${heroMain} <span>${heroYear}</span>`;
     document.getElementById('hero-construction-pct').textContent = cPct.toFixed(2) + '%';
-    if (hasFf) {
-      document.getElementById('hero-pct').textContent = oPct.toFixed(2) + '%';
-      document.getElementById('hero-overall-stat').style.display = '';
-    }
+    document.getElementById('hero-pct').textContent = oPct.toFixed(2) + '%';
 
     document.getElementById('hero-completion').textContent = estimatedCompletion || '—';
     document.getElementById('hero').style.display = '';
@@ -1060,18 +1052,17 @@
         <div class="card-head"><div class="card-head-dot"></div><div class="card-head-title">Project Completion</div></div>
         <div class="dual-ring-wrap">
           <div class="ring-item">
-            ${buildRing(cPct, hasFf ? 90 : 108)}
+            ${buildRing(cPct, 90)}
             <div class="ring-pct">${cPct.toFixed(2)}%</div>
             <div class="ring-label">Construction</div>
-            <div class="ring-sublabel">All contractor works</div>
+            <div class="ring-sublabel">Contractor works</div>
           </div>
-          ${hasFf ? `
           <div class="ring-item">
             ${buildRing(oPct, 90)}
             <div class="ring-pct">${oPct.toFixed(2)}%</div>
             <div class="ring-label">Overall</div>
             <div class="ring-sublabel">Incl. furnishing</div>
-          </div>` : ''}
+          </div>
         </div>
       </div>
     `;
