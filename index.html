@@ -942,10 +942,11 @@
   function overallPct(wp) {
     // Overall = construction (75%) + furnishing & fit-out avg (25%)
     // F&F values default to 0 until entered, dragging the overall down
+    // Industry-standard split for luxury residential: 85% construction, 15% F&F
     const ffOf  = u => Math.max(getPct(wp, `${u} FF`), getPct(wp, `${u} F&F`));
     const cPct  = constructionPct(wp);
     const ffAvg = FF_UNITS.reduce((s, u) => s + ffOf(u), 0) / FF_UNITS.length;
-    return Math.round((cPct * 0.75 + ffAvg * 0.25) * 100) / 100;
+    return Math.round((cPct * 0.85 + ffAvg * 0.15) * 100) / 100;
   }
 
   function buildRing(pct, size = 108) {
